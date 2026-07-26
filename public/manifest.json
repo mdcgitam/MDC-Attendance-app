@@ -1,0 +1,25 @@
+{
+  "short_name": "Attendance Portal",
+  "name": "Attendance Portal",
+  "icons": [
+    {
+      "src": "MDC_LOGO.jpeg?v=2",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "MDC_LOGO.jpeg?v=2",
+      "type": "image/jpeg",
+      "sizes": "192x192"
+    },
+    {
+      "src": "MDC_LOGO.jpeg?v=2",
+      "type": "image/jpeg",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
