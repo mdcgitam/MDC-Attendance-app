@@ -2503,10 +2503,10 @@ const App = () => {
                 <div className="relative mt-10 group">
                   <div className="absolute -inset-3 bg-gradient-to-br from-white/30 to-mdc-300/30 rounded-[2rem] blur-2xl opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
                   <img
-                    src="/MDCteamphoto.jpg"
-                    alt="MDCteamphoto.jpg"
+                    src="/MDCteamphoto.jpeg"
+                    alt="MDCteamphoto.jpeg"
                     className="relative w-full h-auto rounded-2xl shadow-2xl object-cover ring-1 ring-white/30 -rotate-1 transition-transform duration-500 group-hover:rotate-0 group-hover:scale-[1.02]"
-                    onError={(e) => { e.target.onerror = null; e.target.src = '/MDCteamphoto.jpg'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = '/MDCteamphoto.jpeg'; }}
                   />
                 </div>
               </div>
