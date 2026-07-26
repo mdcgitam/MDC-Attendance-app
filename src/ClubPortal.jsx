@@ -452,16 +452,31 @@ const App = () => {
       if (savedSession) {
         try {
           const session = JSON.parse(savedSession);
-          const mockUser = MOCK_USERS.find(
-            u => u.regNo.toLowerCase() === session.regNo.toLowerCase() &&
-              u.email.toLowerCase() === session.email.toLowerCase()
-          );
-          if (mockUser && mockUser.status === 'active') {
-            setUserProfile(mockUser);
-            setIsAdmin(mockUser.domain === 'EB');
-            setView(mockUser.domain === 'EB' ? 'adminDashboard' : 'userDashboard');
+          if (session.regNo === '1234567890' && session.email.toLowerCase() === 'mdc_vsp@gitam.in') {
+            const adminUser = {
+              username: "Admin",
+              email: "mdc_vsp@gitam.in",
+              regNo: "1234567890",
+              domain: "EB",
+              position: "Admin",
+              isAdmin: true,
+              status: "active"
+            };
+            setUserProfile(adminUser);
+            setIsAdmin(true);
+            setView('adminDashboard');
           } else {
-            localStorage.removeItem('mdc_user_session');
+            const mockUser = MOCK_USERS.find(
+              u => u.regNo.toLowerCase() === session.regNo.toLowerCase() &&
+                u.email.toLowerCase() === session.email.toLowerCase()
+            );
+            if (mockUser && mockUser.status === 'active') {
+              setUserProfile(mockUser);
+              setIsAdmin(false);
+              setView('userDashboard');
+            } else {
+              localStorage.removeItem('mdc_user_session');
+            }
           }
         } catch (e) {
           console.error("Error loading mock session: ", e);
@@ -483,25 +498,40 @@ const App = () => {
       if (savedSession) {
         try {
           const session = JSON.parse(savedSession);
-          const usersCollectionPath = `/artifacts/${appId}/public/data/users`;
-          const q = query(
-            collection(dbInstance, usersCollectionPath),
-            where('regNo', '==', session.regNo),
-            where('email', '==', session.email)
-          );
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            const docSnap = querySnapshot.docs[0];
-            const userData = docSnap.data();
-            if (userData.status === 'active') {
-              setUserProfile({ id: docSnap.id, ...userData });
-              setIsAdmin(userData.domain === 'EB');
-              setView(userData.domain === 'EB' ? 'adminDashboard' : 'userDashboard');
+          if (session.regNo === '1234567890' && session.email.toLowerCase() === 'mdc_vsp@gitam.in') {
+            const adminUser = {
+              username: "Admin",
+              email: "mdc_vsp@gitam.in",
+              regNo: "1234567890",
+              domain: "EB",
+              position: "Admin",
+              isAdmin: true,
+              status: "active"
+            };
+            setUserProfile(adminUser);
+            setIsAdmin(true);
+            setView('adminDashboard');
+          } else {
+            const usersCollectionPath = `/artifacts/${appId}/public/data/users`;
+            const q = query(
+              collection(dbInstance, usersCollectionPath),
+              where('regNo', '==', session.regNo),
+              where('email', '==', session.email)
+            );
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+              const docSnap = querySnapshot.docs[0];
+              const userData = docSnap.data();
+              if (userData.status === 'active') {
+                setUserProfile({ id: docSnap.id, ...userData });
+                setIsAdmin(false);
+                setView('userDashboard');
+              } else {
+                localStorage.removeItem('mdc_user_session');
+              }
             } else {
               localStorage.removeItem('mdc_user_session');
             }
-          } else {
-            localStorage.removeItem('mdc_user_session');
           }
         } catch (e) {
           console.error("Error restoring session: ", e);
@@ -750,6 +780,25 @@ const App = () => {
     const regNo = loginRegNo.trim();
     const email = loginEmail.trim().toLowerCase();
 
+    // Check custom admin credentials
+    if (regNo === '1234567890' && email === 'mdc_vsp@gitam.in') {
+      const adminUser = {
+        username: "Admin",
+        email: "mdc_vsp@gitam.in",
+        regNo: "1234567890",
+        domain: "EB",
+        position: "Admin",
+        isAdmin: true,
+        status: "active"
+      };
+      setUserProfile(adminUser);
+      setIsAdmin(true);
+      localStorage.setItem('mdc_user_session', JSON.stringify({ regNo: '1234567890', email: 'mdc_vsp@gitam.in' }));
+      setView('adminDashboard');
+      setAdminView('dashboard');
+      return;
+    }
+
     if (firebaseNotConfigured) {
       const mockUser = MOCK_USERS.find(
         u => u.regNo.toLowerCase() === regNo.toLowerCase() &&
@@ -767,9 +816,9 @@ const App = () => {
       }
 
       setUserProfile(mockUser);
-      setIsAdmin(mockUser.domain === 'EB');
+      setIsAdmin(false);
       localStorage.setItem('mdc_user_session', JSON.stringify({ regNo: mockUser.regNo, email: mockUser.email }));
-      setView(mockUser.domain === 'EB' ? 'adminDashboard' : 'userDashboard');
+      setView('userDashboard');
       setAdminView('dashboard');
       return;
     }
@@ -796,11 +845,10 @@ const App = () => {
         return;
       }
 
-      const isUserAdmin = userData.domain === 'EB';
       setUserProfile({ id: docSnap.id, ...userData });
-      setIsAdmin(isUserAdmin);
+      setIsAdmin(false);
       localStorage.setItem('mdc_user_session', JSON.stringify({ regNo: userData.regNo, email: userData.email }));
-      setView(isUserAdmin ? 'adminDashboard' : 'userDashboard');
+      setView('userDashboard');
       setAdminView('dashboard');
     } catch (e) {
       console.error("Login error: ", e);
