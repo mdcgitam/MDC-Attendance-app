@@ -9,6 +9,11 @@ import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc
 const ALLOWED_EMAIL_DOMAINS = ['gitam.in', 'student.gitam.edu'];
 const isAllowedEmailDomain = (email) => !!email && ALLOWED_EMAIL_DOMAINS.some(domain => email.toLowerCase().endsWith(`@${domain}`));
 
+// The one email address that is granted administrator access; everyone else is a
+// standard member. Configured via REACT_APP_ADMIN_EMAIL (see .env.example).
+const ADMIN_EMAIL = (process.env.REACT_APP_ADMIN_EMAIL || '').trim().toLowerCase();
+const isAdminEmail = (email) => !!ADMIN_EMAIL && !!email && email.trim().toLowerCase() === ADMIN_EMAIL;
+
 // A drop-in replacement for <select> with the same value/onChange(value) contract,
 // used where a native <select> would otherwise feel visually flat (its open menu
 // can't be styled or animated in any browser).
@@ -250,45 +255,45 @@ const CustomDateInput = ({ value, onChange, placeholder = 'Select date', classNa
 // so the UI can be reviewed end-to-end via the dev bypass before real credentials exist.
 // Never written anywhere - purely local state seeding, no Firestore calls involved.
 const TEAM_2026_27 = [
-  { username: "DANDU HASINI", email: "hdandu2@gitam.in", regNo: "2023002808", contact: "6305327994", year: "4th year", program: "BTECH-CSE AIML", domain: "EB", position: "President", isAdmin: true, status: "active", photo: null },
-  { username: "KARRI AKASH KISHAN", email: "akarri4@gitam.in", regNo: "2023002725", contact: "8374849797", year: "4th year", program: "BTECH-CSE", domain: "EB", position: "Vice President", isAdmin: true, status: "active", photo: null },
-  { username: "KUNDRAPU TANISHQ", email: "tkundrap@student.gitam.edu", regNo: "2024036990", contact: "9652177526", year: "3rd year", program: "BTECH-CSE", domain: "EB", position: "Secretary", isAdmin: true, status: "active", photo: null },
-  { username: "KATRAGADDA SRINIVAS KARTHIK", email: "skatrag1@student.gitam.edu", regNo: "2025058532", contact: "6302655976", year: "2nd year", program: "BTECH-CSEAIML", domain: "EB", position: "Head of Operations", isAdmin: true, status: "active", photo: null },
-  { username: "AKI SRI HARSHA", email: "saki@gitam.in", regNo: "2023000683", contact: "7780610391", year: "3rd year", program: "BTECH-CSE", domain: "EB", position: "Technical Head", isAdmin: true, status: "active", photo: null },
-  { username: "MANNEM LIKHITA", email: "lmannem@student.gitam.edu", regNo: "2025203946", contact: "9849497687", year: "2nd year", program: "BTECH-CSE AIML", domain: "EB", position: "Creative Head", isAdmin: true, status: "active", photo: null },
-  { username: "IKKARA RISHI KARTHIKEYAN", email: "rikkara@student.gitam.edu", regNo: "2024002809", contact: "9417086863", year: "3rd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "NIHAL MAREDLA", email: "nmaredla@student.gitam.edu", regNo: "2024003999", contact: "8985807898", year: "3rd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "MEDIDI SANJANA", email: "smedidi@student.gitam.edu", regNo: "2024000543", contact: "9000272639", year: "3rd year", program: "BTECH-CSE AIML", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "SAGI LAKSHMI KAIVALYA", email: "lsagi@student.gitam.edu", regNo: "2024003872", contact: "9121396159", year: "3rd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "DHANA TARUN BALIVADA", email: "dbalivad2@student.gitam.edu", regNo: "2024014973", contact: "8341135355", year: "3rd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "SIRIKI SAI SATYA YASWANTH", email: "ssiriki@student.gitam.edu", regNo: "2025023567", contact: "8247598200", year: "2nd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "SOMAYAJULA RAAM SASHANK", email: "ssomaya1@student.gitam.edu", regNo: "2025016278", contact: "7396096611", year: "2nd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "MOHAMED MAHABOOB ALI", email: "mmohamed@student.gitam.edu", regNo: "2024006642", contact: "9848096151", year: "3rd year", program: "BTECH-CSE AIML", domain: "WebArcs", position: "Domain Lead", isAdmin: false, status: "active", photo: null },
-  { username: "GAJJALA JASWITHA REDDY", email: "jgajjala@student.gitam.edu", regNo: "2024008155", contact: "7893752980", year: "3rd year", program: "BTECH-CSE", domain: "WebArcs", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "DADI DIVYA SREE", email: "ddadi2@student.gitam.edu", regNo: "2024112838", contact: "7093151520", year: "3rd year", program: "BTECH-CSE", domain: "WebArcs", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "YADLA SAI SUSHMA", email: "syadla2@student.gitam.edu", regNo: "2024165826", contact: "7207017342", year: "3rd year", program: "BTECH-CSE", domain: "WebArcs", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "TEDDI GUNA", email: "gteddi@student.gitam.edu", regNo: "2025066665", contact: "8790376902", year: "2nd year", program: "BTECH-CSE", domain: "WebArcs", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "EATY VENKATA LAKSHMI PRIYANKA", email: "veaty@student.gitam.edu", regNo: "2024003875", contact: "9059737669", year: "3rd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "D BHARGAVI", email: "bdevired@student.gitam.edu", regNo: "2025346791", contact: "7013859801", year: "2nd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "PRIANSHU KUMAR SAHU", email: "psahu1@student.gitam.edu", regNo: "2025055906", contact: "7620269872", year: "2nd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "KOUSTAV BOSE", email: "kbose@student.gitam.edu", regNo: "2025068958", contact: "8583999769", year: "2nd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "CHITROTHU SANJITA", email: "schitrot@student.gitam.edu", regNo: "2025222588", contact: "6300843004", year: "2nd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "BALABHADRUNI AKSHAYA", email: "abalabha@student.gitam.edu", regNo: "2024018066", contact: "6305419983", year: "3rd year", program: "BTECH-CSE", domain: "Content", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "GOLI SAHITHI", email: "sgoli2@student.gitam.edu", regNo: "2024021633", contact: "7780440641", year: "3rd year", program: "BTECH-CSE", domain: "Content", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "NAMMI SAI JAHNAVI", email: "snammi@student.gitam.edu", regNo: "2025223289", contact: "7793959681", year: "2nd year", program: "BTECH-CSE AIML", domain: "Content", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "ILAPAKURTHY SAI SINDHU MANASA", email: "silapaku@student.gitam.edu", regNo: "2024001918", contact: "7013894069", year: "3rd year", program: "BTECH-CSE", domain: "Design", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "AFREEN NAAZ ALI", email: "aali2@student.gitam.edu", regNo: "2025271991", contact: "8763346675", year: "2nd year", program: "BTECH-CSE AIML", domain: "Design", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "WARIZ SHAIK", email: "wshaik@student.gitam.edu", regNo: "2025050327", contact: "7893537788", year: "2nd year", program: "BTECH-CSE", domain: "Design", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "SONALI SRIPATHI", email: "ssripath@student.gitam.edu", regNo: "2025356418", contact: "9347376837", year: "2nd year", program: "BTECH-CSE", domain: "Design", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "HIMESH KAMAL ESARLA", email: "hesarla@student.gitam.edu", regNo: "2025112687", contact: "8121611248", year: "2nd year", program: "BTECH-CSE", domain: "Design", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "KALAGARLA SAI SATHVIKA", email: "skalagar@student.gitam.edu", regNo: "2024006491", contact: "8985099101", year: "3rd year", program: "BTECH-CSE", domain: "Photography", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "K VAMSI KRISHNA", email: "vkaranam@student.gitam.edu", regNo: "2024026464", contact: "9182136152", year: "3rd year", program: "BTECH-CSE AIML", domain: "Photography", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "ATLA VINAY", email: "vatla@student.gitam.edu", regNo: "2024041712", contact: "7032272667", year: "3rd year", program: "BTECH-CSE", domain: "Photography", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "SRADDHA KASARA", email: "skasara@student.gitam.edu", regNo: "2025585984", contact: "6301428794", year: "2nd year", program: "BSC", domain: "Photography", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "POSAM ADRIJA", email: "aposam@student.gitam.edu", regNo: "2024008586", contact: "8106698963", year: "3rd year", program: "BTECH-CSE AIML", domain: "PR", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "SREE MAHI CHANDAGANI", email: "schandag@student.gitam.edu", regNo: "2024017749", contact: "9032446824", year: "3rd year", program: "BTECH-CSE AIML", domain: "PR", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "PENMETSA CHANDRA HASINI", email: "cpenmets@student.gitam.edu", regNo: "2025026422", contact: "8093560963", year: "2nd year", program: "BTECH-CSE", domain: "PR", position: "Member", isAdmin: false, status: "active", photo: null },
-  { username: "ANIKETH KUMAR YADAV", email: "ayadav8@student.gitam.edu", regNo: "2025466212", contact: "7579861571", year: "2nd year", program: "BTECH-CSE AIML", domain: "PR", position: "Member", isAdmin: false, status: "active", photo: null }
+  { username: "DANDU HASINI", email: "hdandu2@gitam.in", regNo: "2023002808", contact: "6305327994", year: "4th year", program: "BTECH-CSE AIML", domain: "EB", position: "President", isAdmin: true, status: "active", stayType: "Day Scholar" },
+  { username: "KARRI AKASH KISHAN", email: "akarri4@gitam.in", regNo: "2023002725", contact: "8374849797", year: "4th year", program: "BTECH-CSE", domain: "EB", position: "Vice President", isAdmin: true, status: "active", stayType: "Hosteller" },
+  { username: "KUNDRAPU TANISHQ", email: "tkundrap@student.gitam.edu", regNo: "2024036990", contact: "9652177526", year: "3rd year", program: "BTECH-CSE", domain: "EB", position: "Secretary", isAdmin: true, status: "active", stayType: "Day Scholar" },
+  { username: "KATRAGADDA SRINIVAS KARTHIK", email: "skatrag1@student.gitam.edu", regNo: "2025058532", contact: "6302655976", year: "2nd year", program: "BTECH-CSEAIML", domain: "EB", position: "Head of Operations", isAdmin: true, status: "active", stayType: "Hosteller" },
+  { username: "AKI SRI HARSHA", email: "saki@gitam.in", regNo: "2023000683", contact: "7780610391", year: "3rd year", program: "BTECH-CSE", domain: "EB", position: "Technical Head", isAdmin: true, status: "active", stayType: "Day Scholar" },
+  { username: "MANNEM LIKHITA", email: "lmannem@student.gitam.edu", regNo: "2025203946", contact: "9849497687", year: "2nd year", program: "BTECH-CSE AIML", domain: "EB", position: "Creative Head", isAdmin: true, status: "active", stayType: "Hosteller" },
+  { username: "IKKARA RISHI KARTHIKEYAN", email: "rikkara@student.gitam.edu", regNo: "2024002809", contact: "9417086863", year: "3rd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "NIHAL MAREDLA", email: "nmaredla@student.gitam.edu", regNo: "2024003999", contact: "8985807898", year: "3rd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "MEDIDI SANJANA", email: "smedidi@student.gitam.edu", regNo: "2024000543", contact: "9000272639", year: "3rd year", program: "BTECH-CSE AIML", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "SAGI LAKSHMI KAIVALYA", email: "lsagi@student.gitam.edu", regNo: "2024003872", contact: "9121396159", year: "3rd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "DHANA TARUN BALIVADA", email: "dbalivad2@student.gitam.edu", regNo: "2024014973", contact: "8341135355", year: "3rd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "SIRIKI SAI SATYA YASWANTH", email: "ssiriki@student.gitam.edu", regNo: "2025023567", contact: "8247598200", year: "2nd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "SOMAYAJULA RAAM SASHANK", email: "ssomaya1@student.gitam.edu", regNo: "2025016278", contact: "7396096611", year: "2nd year", program: "BTECH-CSE", domain: "DataVerse", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "MOHAMED MAHABOOB ALI", email: "mmohamed@student.gitam.edu", regNo: "2024006642", contact: "9848096151", year: "3rd year", program: "BTECH-CSE AIML", domain: "WebArcs", position: "Domain Lead", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "GAJJALA JASWITHA REDDY", email: "jgajjala@student.gitam.edu", regNo: "2024008155", contact: "7893752980", year: "3rd year", program: "BTECH-CSE", domain: "WebArcs", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "DADI DIVYA SREE", email: "ddadi2@student.gitam.edu", regNo: "2024112838", contact: "7093151520", year: "3rd year", program: "BTECH-CSE", domain: "WebArcs", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "YADLA SAI SUSHMA", email: "syadla2@student.gitam.edu", regNo: "2024165826", contact: "7207017342", year: "3rd year", program: "BTECH-CSE", domain: "WebArcs", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "TEDDI GUNA", email: "gteddi@student.gitam.edu", regNo: "2025066665", contact: "8790376902", year: "2nd year", program: "BTECH-CSE", domain: "WebArcs", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "EATY VENKATA LAKSHMI PRIYANKA", email: "veaty@student.gitam.edu", regNo: "2024003875", contact: "9059737669", year: "3rd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "D BHARGAVI", email: "bdevired@student.gitam.edu", regNo: "2025346791", contact: "7013859801", year: "2nd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "PRIANSHU KUMAR SAHU", email: "psahu1@student.gitam.edu", regNo: "2025055906", contact: "7620269872", year: "2nd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "KOUSTAV BOSE", email: "kbose@student.gitam.edu", regNo: "2025068958", contact: "8583999769", year: "2nd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "CHITROTHU SANJITA", email: "schitrot@student.gitam.edu", regNo: "2025222588", contact: "6300843004", year: "2nd year", program: "BTECH-CSE", domain: "CP", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "BALABHADRUNI AKSHAYA", email: "abalabha@student.gitam.edu", regNo: "2024018066", contact: "6305419983", year: "3rd year", program: "BTECH-CSE", domain: "Content", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "GOLI SAHITHI", email: "sgoli2@student.gitam.edu", regNo: "2024021633", contact: "7780440641", year: "3rd year", program: "BTECH-CSE", domain: "Content", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "NAMMI SAI JAHNAVI", email: "snammi@student.gitam.edu", regNo: "2025223289", contact: "7793959681", year: "2nd year", program: "BTECH-CSE AIML", domain: "Content", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "ILAPAKURTHY SAI SINDHU MANASA", email: "silapaku@student.gitam.edu", regNo: "2024001918", contact: "7013894069", year: "3rd year", program: "BTECH-CSE", domain: "Design", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "AFREEN NAAZ ALI", email: "aali2@student.gitam.edu", regNo: "2025271991", contact: "8763346675", year: "2nd year", program: "BTECH-CSE AIML", domain: "Design", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "WARIZ SHAIK", email: "wshaik@student.gitam.edu", regNo: "2025050327", contact: "7893537788", year: "2nd year", program: "BTECH-CSE", domain: "Design", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "SONALI SRIPATHI", email: "ssripath@student.gitam.edu", regNo: "2025356418", contact: "9347376837", year: "2nd year", program: "BTECH-CSE", domain: "Design", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "HIMESH KAMAL ESARLA", email: "hesarla@student.gitam.edu", regNo: "2025112687", contact: "8121611248", year: "2nd year", program: "BTECH-CSE", domain: "Design", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "KALAGARLA SAI SATHVIKA", email: "skalagar@student.gitam.edu", regNo: "2024006491", contact: "8985099101", year: "3rd year", program: "BTECH-CSE", domain: "Photography", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "K VAMSI KRISHNA", email: "vkaranam@student.gitam.edu", regNo: "2024026464", contact: "9182136152", year: "3rd year", program: "BTECH-CSE AIML", domain: "Photography", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "ATLA VINAY", email: "vatla@student.gitam.edu", regNo: "2024041712", contact: "7032272667", year: "3rd year", program: "BTECH-CSE", domain: "Photography", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "SRADDHA KASARA", email: "skasara@student.gitam.edu", regNo: "2025585984", contact: "6301428794", year: "2nd year", program: "BSC", domain: "Photography", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "POSAM ADRIJA", email: "aposam@student.gitam.edu", regNo: "2024008586", contact: "8106698963", year: "3rd year", program: "BTECH-CSE AIML", domain: "PR", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "SREE MAHI CHANDAGANI", email: "schandag@student.gitam.edu", regNo: "2024017749", contact: "9032446824", year: "3rd year", program: "BTECH-CSE AIML", domain: "PR", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" },
+  { username: "PENMETSA CHANDRA HASINI", email: "cpenmets@student.gitam.edu", regNo: "2025026422", contact: "8093560963", year: "2nd year", program: "BTECH-CSE", domain: "PR", position: "Member", isAdmin: false, status: "active", stayType: "Hosteller" },
+  { username: "ANIKETH KUMAR YADAV", email: "ayadav8@student.gitam.edu", regNo: "2025466212", contact: "7579861571", year: "2nd year", program: "BTECH-CSE AIML", domain: "PR", position: "Member", isAdmin: false, status: "active", stayType: "Day Scholar" }
 ];
 
 const MOCK_USERS = TEAM_2026_27.map((user, index) => ({
@@ -353,21 +358,25 @@ const App = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [newUser, setNewUser] = useState(null);
-  const [deletingUser, setDeletingUser] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [deletingSlot, setDeletingSlot] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState([]);
   const [filterDomain, setFilterDomain] = useState([]);
   const [filterYear, setFilterYear] = useState([]);
   const [filterPosition, setFilterPosition] = useState([]);
+  const [filterStayType, setFilterStayType] = useState([]);
 
 
   // State for Attendance Slots
   const [attendanceSlots, setAttendanceSlots] = useState([]);
   const [showCreateSlot, setShowCreateSlot] = useState(false);
-  const [newSlotForm, setNewSlotForm] = useState({ slotType: 'Event', slotName: '', date: '', venue: '', timings: '' });
-  const [editingSlot, setEditingSlot] = useState(null);
-  const [selectedDomains, setSelectedDomains] = useState([]);
+  const [newSlotForm, setNewSlotForm] = useState({ slotType: 'Event', slotName: '', date: '', startTime: '', endTime: '', roomNumber: '', description: '' });
+  const [editingSlotMeta, setEditingSlotMeta] = useState(null);
+  const [markingAttendanceSlot, setMarkingAttendanceSlot] = useState(null);
+  const [viewingSlot, setViewingSlot] = useState(null);
+  const [eligibleMemberIds, setEligibleMemberIds] = useState([]);
+  const [eligibleMemberSearch, setEligibleMemberSearch] = useState('');
   const [slotAttendance, setSlotAttendance] = useState([]); // Array of { id, username, email, domain, position, isPresent }
   const [loginRegNo, setLoginRegNo] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
@@ -380,8 +389,6 @@ const App = () => {
   const [slotTypeFilter, setSlotTypeFilter] = useState([]);
   const [slotMonthFilter, setSlotMonthFilter] = useState([]);
   const [slotYearFilter, setSlotYearFilter] = useState([]);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importFile, setImportFile] = useState(null);
 
   // State for Dashboard
   const [showMemberAttendanceDetails, setShowMemberAttendanceDetails] = useState(false);
@@ -395,7 +402,6 @@ const App = () => {
   const [dashboardFilterAttendance, setDashboardFilterAttendance] = useState([]);
 
   // User Dashboard State
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [userDashboardFilters, setUserDashboardFilters] = useState({ slotType: [], status: [], fromDate: '', toDate: '' });
 
@@ -429,6 +435,7 @@ const App = () => {
   const domains = ["WebArcs", "DataVerse", "CP", "Content", "Design", "PR", "Photography", "EB"];
   const positions = ["President", "Vice President", "Secretary", "Head of Operations", "Technical Head", "Creative Head", "Domain Lead", "Member"];
   const years = ["1st year", "2nd year", "3rd year", "4th year"];
+  const stayTypes = ["Day Scholar", "Hosteller"];
   const slotTypes = ["Event", "Domain Meeting", "Core Team Meeting"];
   const slotTypesMap = {
     'event': 'Event',
@@ -495,8 +502,8 @@ const App = () => {
             const userData = docSnap.data();
             if (userData.status === 'active') {
               setUserProfile({ id: docSnap.id, ...userData });
-              setIsAdmin(userData.domain === 'EB');
-              setView(userData.domain === 'EB' ? 'adminDashboard' : 'userDashboard');
+              setIsAdmin(isAdminEmail(userData.email));
+              setView(isAdminEmail(userData.email) ? 'adminDashboard' : 'userDashboard');
             } else {
               localStorage.removeItem('mdc_user_session');
             }
@@ -522,80 +529,6 @@ const App = () => {
     setAllUsers(MOCK_USERS);
     setAttendanceSlots(MOCK_ATTENDANCE_SLOTS);
   }, [firebaseNotConfigured, isAdmin, userProfile]);
-
-  // Set default selected domains based on slot type
-  useEffect(() => {
-    const activeSlotType = editingSlot ? editingSlot.slotType : newSlotForm.slotType;
-    if (!activeSlotType) return;
-
-    if (activeSlotType === 'Core Team Meeting') {
-      setSelectedDomains(domains);
-    } else if (activeSlotType === 'Domain Meeting') {
-      if (editingSlot) {
-        let domainsList = editingSlot.selectedDomains;
-        if (!domainsList || domainsList.length === 0) {
-          domainsList = Array.from(new Set(
-            allUsers.filter(u => (editingSlot.eligibleUserIds || []).includes(u.id)).map(u => u.domain)
-          ));
-        }
-        setSelectedDomains(domainsList.slice(0, 1));
-      } else {
-        setSelectedDomains([]);
-      }
-    } else if (activeSlotType === 'Event') {
-      if (editingSlot) {
-        let domainsList = editingSlot.selectedDomains;
-        if (!domainsList || domainsList.length === 0) {
-          domainsList = Array.from(new Set(
-            allUsers.filter(u => (editingSlot.eligibleUserIds || []).includes(u.id)).map(u => u.domain)
-          ));
-        }
-        setSelectedDomains(domainsList);
-      } else {
-        setSelectedDomains(domains);
-      }
-    }
-  }, [newSlotForm.slotType, editingSlot?.slotType, showCreateSlot, editingSlot]);
-
-  // Sync users list to slotAttendance when selectedDomains or active users change
-  useEffect(() => {
-    if (!showCreateSlot && !editingSlot) return;
-
-    const filteredActiveUsers = allUsers.filter(u => u.status === 'active' && selectedDomains.includes(u.domain));
-
-    setSlotAttendance(prev => {
-      return filteredActiveUsers.map(user => {
-        const existing = prev.find(p => p.id === user.id);
-        if (existing) {
-          return existing;
-        }
-
-        // If editing an existing slot, check if this user has a saved attendance record
-        if (editingSlot && editingSlot.attendance) {
-          const savedRecord = editingSlot.attendance.find(a => a.userId === user.id);
-          if (savedRecord) {
-            return {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              domain: user.domain,
-              position: user.position,
-              isPresent: savedRecord.isPresent
-            };
-          }
-        }
-
-        return {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          domain: user.domain,
-          position: user.position,
-          isPresent: false
-        };
-      });
-    });
-  }, [selectedDomains, allUsers, showCreateSlot, editingSlot]);
 
   // Fetch all data from Firestore after login/auth is ready
   useEffect(() => {
@@ -656,13 +589,12 @@ const App = () => {
   useEffect(() => {
     const isAnyModalOpen =
       showCreateSlot ||
-      showImportModal ||
       showMemberAttendanceDetails ||
-      showEditProfileModal ||
-      !!editingSlot ||
+      !!editingSlotMeta ||
+      !!markingAttendanceSlot ||
+      !!viewingSlot ||
       !!editingUser ||
       !!newUser ||
-      !!deletingUser ||
       !!deletingSlot;
 
     if (isAnyModalOpen) {
@@ -677,13 +609,12 @@ const App = () => {
     };
   }, [
     showCreateSlot,
-    showImportModal,
     showMemberAttendanceDetails,
-    showEditProfileModal,
-    editingSlot,
+    editingSlotMeta,
+    markingAttendanceSlot,
+    viewingSlot,
     editingUser,
     newUser,
-    deletingUser,
     deletingSlot
   ]);
 
@@ -796,7 +727,7 @@ const App = () => {
         return;
       }
 
-      const isUserAdmin = userData.domain === 'EB';
+      const isUserAdmin = isAdminEmail(userData.email);
       setUserProfile({ id: docSnap.id, ...userData });
       setIsAdmin(isUserAdmin);
       localStorage.setItem('mdc_user_session', JSON.stringify({ regNo: userData.regNo, email: userData.email }));
@@ -865,35 +796,11 @@ const App = () => {
     }
   };
 
-  const handleDeleteUser = async (user) => {
-    if (!db || !isAdmin) return;
-    setModalMessage('');
-    setDeletingUser(user);
-  };
-
-  const confirmDelete = async () => {
-    if (!db || !isAdmin || !deletingUser) return;
-    try {
-      // Deleting a user from Firebase Auth by an admin is not possible from the client-side SDK.
-      // The auth account will become an orphan but will be unusable as the Firestore doc is deleted.
-
-      // Delete the user's Firestore document
-      const userDocRef = doc(db, `/artifacts/${appId}/public/data/users`, deletingUser.id);
-      await deleteDoc(userDocRef);
-
-      setMessage(`User ${deletingUser.username} has been deleted.`);
-      setDeletingUser(null);
-    } catch (e) {
-      console.error("Error deleting user: ", e.message);
-      setMessage("Failed to delete user. Please try again.");
-      setDeletingUser(null);
-    }
-  };
-
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!db || !isAdmin || !editingUser) return;
 
+    setIsSaving(true);
     try {
       const userDocRef = doc(db, `/artifacts/${appId}/public/data/users`, editingUser.id);
       await updateDoc(userDocRef, {
@@ -905,7 +812,8 @@ const App = () => {
         program: editingUser.program,
         domain: editingUser.domain,
         position: editingUser.position,
-        isAdmin: editingUser.domain === 'EB'
+        stayType: editingUser.stayType || '',
+        isAdmin: isAdminEmail(editingUser.email)
       });
       setModalMessage(`User ${editingUser.username} details updated successfully.`);
       setTimeout(() => {
@@ -915,6 +823,8 @@ const App = () => {
     } catch (e) {
       console.error("Error updating user: ", e.message);
       setMessage("Failed to update user details. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -939,8 +849,8 @@ const App = () => {
         domain: newUser.domain || 'EB',
         position: newUser.position || 'Member',
         status: 'active',
-        isAdmin: newUser.domain === 'EB',
-        photo: null
+        stayType: newUser.stayType || '',
+        isAdmin: isAdminEmail(newUser.email),
       };
 
       if (allUsers.some(u => u.email.toLowerCase() === mockNewUser.email.toLowerCase() || u.regNo.toLowerCase() === mockNewUser.regNo.toLowerCase())) {
@@ -957,6 +867,7 @@ const App = () => {
       return;
     }
 
+    setIsSaving(true);
     try {
       const usersCollectionPath = `/artifacts/${appId}/public/data/users`;
 
@@ -984,8 +895,8 @@ const App = () => {
         domain: newUser.domain || 'EB',
         position: newUser.position || 'Member',
         status: 'active',
-        isAdmin: newUser.domain === 'EB',
-        photo: null,
+        stayType: newUser.stayType || '',
+        isAdmin: isAdminEmail(newUser.email),
         createdAt: serverTimestamp ? serverTimestamp() : new Date()
       });
 
@@ -997,6 +908,8 @@ const App = () => {
     } catch (e) {
       console.error("Error adding user: ", e.message);
       setModalMessage(`Failed to add user: ${e.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1039,8 +952,8 @@ const App = () => {
           domain: member.domain,
           position: member.position,
           status: 'active',
-          isAdmin: member.isAdmin,
-          photo: null,
+          stayType: member.stayType || '',
+          isAdmin: isAdminEmail(member.email),
           createdAt: serverTimestamp ? serverTimestamp() : new Date()
         });
         seededCount++;
@@ -1059,7 +972,6 @@ const App = () => {
   const totalUsers = allUsers.length;
   const activeUsersCount = allUsers.filter(user => user.status === 'active').length;
   const inactiveUsersCount = allUsers.filter(user => user.status === 'inactive').length;
-  const pendingUsersCount = allUsers.filter(user => user.status === 'pending').length;
 
   // Custom sort function for users
   function userSort(a, b) {
@@ -1097,12 +1009,13 @@ const App = () => {
     const matchesDomain = filterDomain.length === 0 || filterDomain.includes(user.domain);
     const matchesYear = filterYear.length === 0 || filterYear.includes(user.year);
     const matchesPosition = filterPosition.length === 0 || filterPosition.includes(user.position);
+    const matchesStayType = filterStayType.length === 0 || filterStayType.includes(user.stayType);
 
-    return matchesSearch && matchesStatus && matchesDomain && matchesYear && matchesPosition;
+    return matchesSearch && matchesStatus && matchesDomain && matchesYear && matchesPosition && matchesStayType;
   }).sort(userSort);
 
   const downloadUsersCSV = () => {
-    const header = ['Full Name', 'Email', 'Contact', 'Year', 'Reg No', 'Program', 'Domain', 'Position', 'Status'];
+    const header = ['Full Name', 'Email', 'Contact', 'Year', 'Reg No', 'Program', 'Domain', 'Position', 'Stay Type', 'Status'];
     const rows = filteredUsers.map(user =>
       [
         `"${user.username}"`,
@@ -1113,6 +1026,7 @@ const App = () => {
         user.program,
         user.domain,
         user.position,
+        user.stayType || '',
         user.status
       ].join(',')
     );
@@ -1129,6 +1043,24 @@ const App = () => {
   };
 
   // Handle admin actions (attendance slots)
+  // Resolves the roster of active members eligible for a slot, falling back to the
+  // legacy domain-based eligibility (selectedDomains) for slots created before the
+  // member-picker existed.
+  const resolveEligibleUserIds = (slot) => {
+    if (Array.isArray(slot?.eligibleUserIds) && slot.eligibleUserIds.length > 0) {
+      return slot.eligibleUserIds;
+    }
+    const legacyDomains = slot?.selectedDomains || [];
+    return allUsers.filter(u => u.status === 'active' && legacyDomains.includes(u.domain)).map(u => u.id);
+  };
+
+  const formatSlotTiming = (slot) => {
+    if (slot.startTime || slot.endTime) {
+      return `${slot.startTime || '—'} - ${slot.endTime || '—'}`;
+    }
+    return slot.timings || 'N/A';
+  };
+
   const handleCreateSlot = async (e) => {
     e.preventDefault();
     if (!db || !isAdmin) return;
@@ -1138,37 +1070,44 @@ const App = () => {
       return;
     }
 
-    if (slotAttendance.length === 0) {
-      setModalMessage("Please select at least one participating domain with active members.");
+    if (eligibleMemberIds.length === 0) {
+      setModalMessage("Please select at least one eligible member.");
       return;
     }
 
+    setIsSaving(true);
     try {
       const slotsCollectionPath = `/artifacts/${appId}/public/data/attendance_slots`;
-      const attendanceToSave = slotAttendance.map(user => ({
-        userId: user.id,
-        isPresent: user.isPresent,
-        username: user.username,
-        domain: user.domain,
-        position: user.position,
-      }));
+      const attendanceToSave = eligibleMemberIds.map(id => {
+        const user = allUsers.find(u => u.id === id);
+        return {
+          userId: id,
+          isPresent: false,
+          username: user?.username || '',
+          domain: user?.domain || '',
+          position: user?.position || '',
+        };
+      });
 
       await addDoc(collection(db, slotsCollectionPath), {
         slotType: newSlotForm.slotType,
         slotName: newSlotForm.slotName,
         date: newSlotForm.date,
-        venue: newSlotForm.venue || '',
-        timings: newSlotForm.timings || '',
-        selectedDomains: selectedDomains,
-        eligibleUserIds: slotAttendance.map(u => u.id),
+        startTime: newSlotForm.startTime || '',
+        endTime: newSlotForm.endTime || '',
+        roomNumber: newSlotForm.roomNumber || '',
+        description: newSlotForm.description || '',
+        eligibleUserIds: eligibleMemberIds,
         attendance: attendanceToSave,
+        overrideLog: [],
+        closed: false,
         createdAt: serverTimestamp(),
       });
 
-      setModalMessage("Attendance slot created and posted successfully.");
-      setNewSlotForm({ slotType: 'Event', slotName: '', date: '', venue: '', timings: '' });
-      setSelectedDomains([]);
-      setSlotAttendance([]);
+      setModalMessage("Slot created successfully.");
+      setNewSlotForm({ slotType: 'Event', slotName: '', date: '', startTime: '', endTime: '', roomNumber: '', description: '' });
+      setEligibleMemberIds([]);
+      setEligibleMemberSearch('');
       setTimeout(() => {
         setShowCreateSlot(false);
         setModalMessage('');
@@ -1176,49 +1115,61 @@ const App = () => {
     } catch (e) {
       console.error("Error creating slot:", e.message);
       setModalMessage("Failed to create attendance slot. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleEditSlot = async (e) => {
     e.preventDefault();
-    if (!db || !isAdmin || !editingSlot) return;
+    if (!db || !isAdmin || !editingSlotMeta) return;
 
-    if (slotAttendance.length === 0) {
-      setModalMessage("Please select at least one participating domain with active members.");
+    if (eligibleMemberIds.length === 0) {
+      setModalMessage("Please select at least one eligible member.");
       return;
     }
 
+    setIsSaving(true);
     try {
-      const slotDocRef = doc(db, `/artifacts/${appId}/public/data/attendance_slots`, editingSlot.id);
-      const attendanceToSave = slotAttendance.map(user => ({
-        userId: user.id,
-        isPresent: user.isPresent,
-        username: user.username,
-        domain: user.domain,
-        position: user.position,
-      }));
+      const slotDocRef = doc(db, `/artifacts/${appId}/public/data/attendance_slots`, editingSlotMeta.id);
+      const existingAttendance = editingSlotMeta.attendance || [];
+      const attendanceToSave = eligibleMemberIds.map(id => {
+        const existing = existingAttendance.find(a => a.userId === id);
+        if (existing) return existing;
+        const user = allUsers.find(u => u.id === id);
+        return {
+          userId: id,
+          isPresent: false,
+          username: user?.username || '',
+          domain: user?.domain || '',
+          position: user?.position || '',
+        };
+      });
 
       await updateDoc(slotDocRef, {
-        slotType: editingSlot.slotType,
-        slotName: editingSlot.slotName,
-        date: editingSlot.date,
-        venue: editingSlot.venue || '',
-        timings: editingSlot.timings || '',
-        selectedDomains: selectedDomains,
-        eligibleUserIds: slotAttendance.map(u => u.id),
+        slotType: editingSlotMeta.slotType,
+        slotName: editingSlotMeta.slotName,
+        date: editingSlotMeta.date,
+        startTime: editingSlotMeta.startTime || '',
+        endTime: editingSlotMeta.endTime || '',
+        roomNumber: editingSlotMeta.roomNumber || '',
+        description: editingSlotMeta.description || '',
+        eligibleUserIds: eligibleMemberIds,
         attendance: attendanceToSave,
       });
 
-      setModalMessage("Attendance records updated/overridden successfully.");
+      setModalMessage("Slot updated successfully.");
       setTimeout(() => {
-        setEditingSlot(null);
+        setEditingSlotMeta(null);
         setModalMessage('');
-        setSelectedDomains([]);
-        setSlotAttendance([]);
+        setEligibleMemberIds([]);
+        setEligibleMemberSearch('');
       }, 1000);
     } catch (e) {
       console.error("Error updating slot:", e);
-      setModalMessage("Failed to update attendance records. Please try again.");
+      setModalMessage("Failed to update slot. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1242,19 +1193,33 @@ const App = () => {
     }
   };
 
+  const handleToggleSlotClosed = async (slot) => {
+    if (!db || !isAdmin) return;
+    try {
+      const slotDocRef = doc(db, `/artifacts/${appId}/public/data/attendance_slots`, slot.id);
+      await updateDoc(slotDocRef, { closed: !slot.closed });
+      setMessage(slot.closed ? "Slot reopened." : "Slot closed. Attendance can no longer be modified.");
+      setTimeout(() => setMessage(''), 3000);
+    } catch (e) {
+      console.error("Error toggling slot closed state:", e.message);
+      setMessage("Failed to update slot. Please try again.");
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  const openEditSlotMeta = (slot) => {
+    setModalMessage('');
+    setEditingSlotMeta(slot);
+    setEligibleMemberIds(resolveEligibleUserIds(slot));
+    setEligibleMemberSearch('');
+  };
+
   const handleMarkAttendance = (slot) => {
     setModalMessage('');
-    setEditingSlot(slot);
+    setMarkingAttendanceSlot(slot);
 
-    let domainsList = slot.selectedDomains;
-    if (!domainsList || domainsList.length === 0) {
-      domainsList = Array.from(new Set(
-        allUsers.filter(u => (slot.eligibleUserIds || []).includes(u.id)).map(u => u.domain)
-      ));
-    }
-    setSelectedDomains(domainsList);
-
-    const usersForSlot = allUsers.filter(u => u.status === 'active' && domainsList.includes(u.domain));
+    const eligibleIds = resolveEligibleUserIds(slot);
+    const usersForSlot = allUsers.filter(u => eligibleIds.includes(u.id));
     const initialAttendance = usersForSlot.map(user => {
       const attendanceRecord = (slot.attendance || []).find(a => a.userId === user.id);
       return {
@@ -1269,10 +1234,39 @@ const App = () => {
     setSlotAttendance(initialAttendance);
   };
 
+  const handleSaveAttendance = async (e) => {
+    e.preventDefault();
+    if (!db || !isAdmin || !markingAttendanceSlot) return;
+
+    try {
+      const slotDocRef = doc(db, `/artifacts/${appId}/public/data/attendance_slots`, markingAttendanceSlot.id);
+      const attendanceToSave = slotAttendance.map(user => ({
+        userId: user.id,
+        isPresent: user.isPresent,
+        username: user.username,
+        domain: user.domain,
+        position: user.position,
+      }));
+
+      await updateDoc(slotDocRef, { attendance: attendanceToSave });
+
+      setModalMessage("Attendance saved successfully.");
+      setTimeout(() => {
+        setMarkingAttendanceSlot(null);
+        setModalMessage('');
+        setSlotAttendance([]);
+      }, 1000);
+    } catch (e) {
+      console.error("Error saving attendance:", e);
+      setModalMessage("Failed to save attendance. Please try again.");
+    }
+  };
+
   const handleOverrideUserAttendance = async (userId, slotId, newIsPresent) => {
     if (firebaseNotConfigured) {
       setAttendanceSlots(prev => prev.map(s => {
         if (s.id !== slotId) return s;
+        const previous = (s.attendance || []).find(a => a.userId === userId);
         const updatedAttendance = (s.attendance || []).map(a =>
           a.userId === userId ? { ...a, isPresent: newIsPresent } : a
         );
@@ -1288,7 +1282,15 @@ const App = () => {
             });
           }
         }
-        return { ...s, attendance: updatedAttendance };
+        const overrideEntry = {
+          userId,
+          previousValue: previous ? previous.isPresent : null,
+          newValue: newIsPresent,
+          performedBy: userProfile?.email || 'admin',
+          reason: '',
+          timestamp: new Date().toISOString(),
+        };
+        return { ...s, attendance: updatedAttendance, overrideLog: [...(s.overrideLog || []), overrideEntry] };
       }));
       setMessage("Attendance overridden successfully (Local Mock).");
       setTimeout(() => setMessage(''), 3000);
@@ -1303,6 +1305,7 @@ const App = () => {
 
       const slotDocRef = doc(db, `/artifacts/${appId}/public/data/attendance_slots`, slotId);
 
+      const previous = (slot.attendance || []).find(a => a.userId === userId);
       const updatedAttendance = (slot.attendance || []).map(a =>
         a.userId === userId ? { ...a, isPresent: newIsPresent } : a
       );
@@ -1320,8 +1323,18 @@ const App = () => {
         }
       }
 
+      const overrideEntry = {
+        userId,
+        previousValue: previous ? previous.isPresent : null,
+        newValue: newIsPresent,
+        performedBy: userProfile?.email || 'admin',
+        reason: '',
+        timestamp: new Date().toISOString(),
+      };
+
       await updateDoc(slotDocRef, {
-        attendance: updatedAttendance
+        attendance: updatedAttendance,
+        overrideLog: [...(slot.overrideLog || []), overrideEntry]
       });
 
       setMessage("Attendance overridden successfully.");
@@ -1349,54 +1362,12 @@ const App = () => {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    const activeSlot = editingSlot;
+    const activeSlot = markingAttendanceSlot;
     const fileName = `attendance_${activeSlot ? activeSlot.slotName.replace(/ /g, '_') : 'slot'}_${activeSlot ? activeSlot.date : 'date'}.csv`;
     link.setAttribute('download', fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleImportCSV = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const text = evt.target.result;
-        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-        if (lines.length <= 1) return;
-
-        const headers = lines[0].toLowerCase().split(',');
-        const emailIndex = headers.indexOf('email');
-        const statusIndex = headers.indexOf('status');
-
-        if (emailIndex === -1 || statusIndex === -1) {
-          setModalMessage("CSV must contain 'email' and 'status' columns.");
-          return;
-        }
-
-        const imported = lines.slice(1).map(line => {
-          const parts = line.split(',');
-          return {
-            email: parts[emailIndex]?.trim()?.toLowerCase(),
-            status: parts[statusIndex]?.trim()?.toLowerCase()
-          };
-        });
-
-        setSlotAttendance(prev => prev.map(u => {
-          const record = imported.find(i => i.email === u.email.toLowerCase());
-          return record ? { ...u, isPresent: record.status === 'present' } : u;
-        }));
-
-        setModalMessage("CSV imported successfully!");
-      } catch (err) {
-        console.error(err);
-        setModalMessage("Failed to parse CSV.");
-      }
-    };
-    reader.readAsText(file);
   };
 
   const filteredAttendanceList = slotAttendance.filter(user => {
@@ -1523,7 +1494,7 @@ const App = () => {
         slotName: slot.slotName,
         slotType: slotTypesMap[normalizeSlotType(slot.slotType)] || slot.slotType,
         date: formatDate(slot.date),
-        timings: slot.timings,
+        timings: formatSlotTiming(slot),
         status: attendanceRecord ? (attendanceRecord.isPresent ? 'Present' : 'Absent') : 'Absent'
       };
     }).sort((a, b) => {
@@ -1565,44 +1536,6 @@ const App = () => {
       status: attendanceRecord ? (attendanceRecord.isPresent ? 'Present' : 'Absent') : 'Absent'
     };
   }) : [];
-
-  // User Profile and Password Management
-  const handleEditProfile = async (e) => {
-    e.preventDefault();
-    try {
-      const userDocRef = doc(db, `/artifacts/${appId}/public/data/users`, userProfile.id);
-      await updateDoc(userDocRef, {
-        username: userProfile.username,
-        email: userProfile.email,
-        contact: userProfile.contact,
-        year: userProfile.year,
-        regNo: userProfile.regNo,
-        program: userProfile.program,
-        domain: userProfile.domain,
-        position: userProfile.position,
-        photo: userProfile.photo,
-      });
-      setModalMessage("Profile updated successfully!");
-      setTimeout(() => {
-        setShowEditProfileModal(false);
-        setModalMessage('');
-      }, 1000);
-    } catch (e) {
-      console.error("Error updating profile:", e);
-      setModalMessage("Failed to update profile.");
-    }
-  };
-
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        setUserProfile({ ...userProfile, photo: reader.result });
-      };
-    }
-  };
 
   // User Dashboard Attendance Records
   const userAttendanceRecords = attendanceSlots.filter(slot =>
@@ -1733,30 +1666,13 @@ const App = () => {
           className="relative"
           ref={profileDropdownRef}
         >
-          {userProfile && !isAdmin ? (
-            <button onClick={() => setShowProfileDropdown(prev => !prev)} className="w-10 h-10 rounded-full bg-mdc-100 border border-mdc-200 flex items-center justify-center text-mdc-700 transition-transform transform hover:scale-110">
-              {userProfile.photo ? (
-                <img src={userProfile.photo} alt="Profile" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a7.5 7.5 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              )}
-            </button>
-          ) : isAdmin ? (
-            <button onClick={() => setShowProfileDropdown(prev => !prev)} className="w-10 h-10 rounded-full bg-mdc-100 border border-mdc-200 flex items-center justify-center text-mdc-700 transition-transform transform hover:scale-110">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a7.5 7.5 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+          {(userProfile || isAdmin) ? (
+            <button onClick={() => setShowProfileDropdown(prev => !prev)} className="w-10 h-10 rounded-full bg-gradient-to-br from-mdc-300 to-mdc-500 text-white flex items-center justify-center font-bold text-sm shadow-inner transition-transform transform hover:scale-110">
+              {userProfile?.username ? userProfile.username.charAt(0).toUpperCase() : '?'}
             </button>
           ) : null}
           {showProfileDropdown && (
             <div className="animate-dropdown-in origin-top-right absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl shadow-mdc-900/10 border border-mdc-100 p-1.5 z-20">
-              {!isAdmin && (
-                <button onClick={() => { setModalMessage(''); setShowEditProfileModal(true); setShowProfileDropdown(false); }} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-mdc-900 hover:bg-mdc-100 w-full text-left transition-colors">
-                  Edit Details
-                </button>
-              )}
               <button onClick={handleLogout} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 w-full text-left transition-colors">
                 Logout
               </button>
@@ -1775,10 +1691,9 @@ const App = () => {
             <div>
               {adminView === 'dashboard' && (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[
-                      { label: 'Active Users', value: activeUsersCount, dot: 'bg-green-500' },
-                      { label: 'Pending Approvals', value: pendingUsersCount, dot: 'bg-yellow-500' },
+                      { label: 'Active Members', value: activeUsersCount, dot: 'bg-green-500' },
                       { label: 'Total Slots', value: attendanceSlots.length, dot: 'bg-mdc-500' },
                       { label: 'Avg. Attendance Rate', value: calculateAverageAttendanceRate(), dot: 'bg-mdc-700' },
                     ].map((tile, i) => (
@@ -1907,12 +1822,11 @@ const App = () => {
               )}
               {adminView === 'manageUsers' && (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
                     {[
-                      { label: 'Total Users', value: totalUsers, dot: 'bg-mdc-700', text: 'text-mdc-900' },
-                      { label: 'Active Users', value: activeUsersCount, dot: 'bg-green-500', text: 'text-green-700' },
-                      { label: 'Inactive Users', value: inactiveUsersCount, dot: 'bg-red-500', text: 'text-red-700' },
-                      { label: 'Pending Approvals', value: pendingUsersCount, dot: 'bg-yellow-500', text: 'text-yellow-700' },
+                      { label: 'Total Members', value: totalUsers, dot: 'bg-mdc-700', text: 'text-mdc-900' },
+                      { label: 'Active Members', value: activeUsersCount, dot: 'bg-green-500', text: 'text-green-700' },
+                      { label: 'Inactive Members', value: inactiveUsersCount, dot: 'bg-red-500', text: 'text-red-700' },
                     ].map((tile, i) => (
                       <div
                         key={tile.label}
@@ -1943,7 +1857,6 @@ const App = () => {
                       options={[
                         { value: 'active', label: 'Active' },
                         { value: 'inactive', label: 'Inactive' },
-                        { value: 'pending', label: 'Pending Approval' },
                       ]}
                     />
                     <CustomMultiSelect
@@ -1967,13 +1880,20 @@ const App = () => {
                       onChange={(val) => setFilterPosition(val)}
                       options={positions.map(p => ({ value: p, label: p }))}
                     />
-                    {/* <button onClick={downloadUsersCSV} className="w-full sm:w-auto py-2 px-6 bg-gradient-to-r from-mdc-500 to-mdc-700 hover:from-mdc-700 hover:to-mdc-900 text-white font-semibold rounded-full shadow-md shadow-mdc-900/20 hover:shadow-lg active:scale-[0.98] transition-all">
+                    <CustomMultiSelect
+                      className="w-full sm:w-44"
+                      allLabel="Day Scholar / Hosteller"
+                      value={filterStayType}
+                      onChange={(val) => setFilterStayType(val)}
+                      options={stayTypes.map(s => ({ value: s, label: s }))}
+                    />
+                    <button onClick={downloadUsersCSV} title="Download CSV" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-2 px-5 bg-white hover:bg-mdc-50 text-mdc-900 font-semibold rounded-full border border-mdc-300 shadow-sm active:scale-[0.98] transition-all">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
                       Download CSV
-                    </button> */}
-                    {/* <button onClick={handleSeedTeam} className="w-full sm:w-auto py-2 px-6 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white font-semibold rounded-full shadow-md shadow-green-900/20 hover:shadow-lg active:scale-[0.98] transition-all">
-                      Seed 2026-27 Team
-                    </button> */}
-                    <button onClick={() => setNewUser({ username: '', email: '', contact: '', year: '1st year', regNo: '', program: '', domain: 'EB', position: 'Member' })} className="w-full sm:w-auto py-2 px-6 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-semibold rounded-full shadow-md shadow-blue-900/20 hover:shadow-lg active:scale-[0.98] transition-all">
+                    </button>
+                    <button onClick={() => setNewUser({ username: '', email: '', contact: '', year: '1st year', regNo: '', program: '', domain: 'EB', position: 'Member', stayType: 'Day Scholar' })} className="w-full sm:w-auto py-2 px-6 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-semibold rounded-full shadow-md shadow-blue-900/20 hover:shadow-lg active:scale-[0.98] transition-all">
                       Add Member
                     </button>
                   </div>
@@ -1984,7 +1904,6 @@ const App = () => {
                       <table className="min-w-full divide-y divide-mdc-100">
                         <thead className="bg-mdc-50">
                           <tr>
-                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Photo</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Full Name</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
@@ -1993,22 +1912,15 @@ const App = () => {
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Year</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Domain</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Position</th>
+                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stay Type</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-mdc-100">
                           {filteredUsers.map(user => (
-                            <tr key={user.id}>
-                              <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">
-                                <img
-                                  src={user.photo || `https://placehold.co/48x48/2a7b6a/FFFFFF?text=${user.username.charAt(0).toUpperCase()}`}
-                                  alt={`${user.username}`}
-                                  className="w-12 h-12 rounded-full object-cover"
-                                  onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/48x48/2a7b6a/FFFFFF?text=${user.username.charAt(0).toUpperCase()}`; }}
-                                />
-                              </td>
-                              <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{user.username}</td>
+                            <tr key={user.id} className="hover:bg-mdc-50/50 transition-colors">
+                              <td className="px-6 py-3.5 whitespace-nowrap text-sm font-semibold text-gray-700">{user.username}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{user.email}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{user.contact}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{user.regNo}</td>
@@ -2016,31 +1928,39 @@ const App = () => {
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{user.year}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{user.domain}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{user.position}</td>
+                              <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{user.stayType || '—'}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-200">
-                                  <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-green-500' : user.status === 'inactive' ? 'bg-red-500' : 'bg-yellow-500'}`} />
+                                  <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`} />
                                   {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                                 </span>
                               </td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-right text-sm font-medium">
-                                <div className="flex space-x-2 justify-end">
+                                <div className="flex space-x-1 justify-end">
                                   <button
                                     onClick={() => handleToggleStatus(user)}
-                                    className={`${user.status === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} font-semibold`}
+                                    title={user.status === 'active' ? 'Deactivate' : 'Activate'}
+                                    className={`p-1.5 rounded-lg transition-colors ${user.status === 'active' ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}
                                   >
-                                    {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                                    {user.status === 'active' ? (
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1012.728 12.728M5.636 5.636L18.364 18.364M5.636 5.636L12 12" />
+                                      </svg>
+                                    ) : (
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                    )}
                                   </button>
                                   <button
                                     onClick={() => { setModalMessage(''); setEditingUser(user); }}
-                                    className="text-mdc-700 hover:text-mdc-900 font-semibold"
+                                    title="Edit member"
+                                    className="p-1.5 rounded-lg text-mdc-700 hover:bg-mdc-100 transition-colors"
                                   >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteUser(user)}
-                                    className="text-gray-600 hover:text-gray-900 font-semibold"
-                                  >
-                                    Delete
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 19.5H4.5" />
+                                    </svg>
                                   </button>
                                 </div>
                               </td>
@@ -2054,7 +1974,7 @@ const App = () => {
                       <svg className="w-10 h-10 text-mdc-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                       </svg>
-                      <p className="text-sm font-medium text-gray-500">No users found</p>
+                      <p className="text-sm font-medium text-gray-500">No members found</p>
                       <p className="text-xs text-gray-400">Try adjusting your search or filters.</p>
                     </div>
                   )}
@@ -2064,8 +1984,16 @@ const App = () => {
                 <>
                   <div className="animate-fade-in-up relative z-20 bg-white rounded-2xl shadow-sm border border-mdc-100 p-4 flex flex-wrap items-center justify-between gap-3 mt-6">
                     <div className="flex flex-wrap items-center gap-3">
-                      <button onClick={() => { setModalMessage(''); setSelectedDomains(domains); setSlotAttendance([]); setShowCreateSlot(true); }} className="py-2 px-6 bg-gradient-to-r from-mdc-300 to-mdc-500 hover:from-mdc-500 hover:to-mdc-700 text-white font-semibold rounded-full shadow-md shadow-mdc-900/10 hover:shadow-lg active:scale-[0.98] transition-all">
-                        Post Attendance
+                      <button
+                        onClick={() => {
+                          setModalMessage('');
+                          setEligibleMemberIds(allUsers.filter(u => u.status === 'active').map(u => u.id));
+                          setEligibleMemberSearch('');
+                          setShowCreateSlot(true);
+                        }}
+                        className="py-2 px-6 bg-gradient-to-r from-mdc-300 to-mdc-500 hover:from-mdc-500 hover:to-mdc-700 text-white font-semibold rounded-full shadow-md shadow-mdc-900/10 hover:shadow-lg active:scale-[0.98] transition-all"
+                      >
+                        Create Slot
                       </button>
                       <CustomMultiSelect
                         className="w-36"
@@ -2103,9 +2031,10 @@ const App = () => {
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Slot Name</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Venue / Room</th>
+                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Room</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Timings</th>
-                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-mdc-100">
@@ -2114,16 +2043,57 @@ const App = () => {
                             (slotMonthFilter.length === 0 || slotMonthFilter.includes(new Date(slot.date).getMonth().toString())) &&
                             (slotYearFilter.length === 0 || slotYearFilter.includes(new Date(slot.date).getFullYear().toString()))
                           )].sort((a, b) => new Date(a.date) - new Date(b.date)).map(slot => (
-                            <tr key={slot.id}>
+                            <tr key={slot.id} className="hover:bg-mdc-50/50 transition-colors">
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700 font-semibold">{slot.slotName}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{slot.slotType}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{formatDate(slot.date)}</td>
-                              <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{slot.venue || 'N/A'}</td>
-                              <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{slot.timings || 'N/A'}</td>
+                              <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{slot.roomNumber || slot.venue || 'N/A'}</td>
+                              <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{formatSlotTiming(slot)}</td>
+                              <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset ${slot.closed ? 'bg-gray-100 text-gray-600 ring-gray-200' : 'bg-green-50 text-green-700 ring-green-600/20'}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${slot.closed ? 'bg-gray-400' : 'bg-green-500'}`} />
+                                  {slot.closed ? 'Closed' : 'Open'}
+                                </span>
+                              </td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-right text-sm font-medium">
-                                <div className="flex space-x-4">
-                                  <button onClick={() => handleMarkAttendance(slot)} className="text-mdc-700 hover:text-mdc-900 font-semibold">Mark / Override Attendance</button>
-                                  <button onClick={() => handleDeleteSlot(slot)} className="text-red-600 hover:text-red-900 font-semibold">Delete</button>
+                                <div className="flex space-x-1 justify-end">
+                                  <button onClick={() => setViewingSlot(slot)} title="View details" className="p-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.577 3.01 9.964 7.822.13.438.13.921 0 1.359C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.577-3.01-9.964-7.822z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                  </button>
+                                  {!slot.closed && (
+                                    <button onClick={() => openEditSlotMeta(slot)} title="Edit slot" className="p-1.5 rounded-lg text-mdc-700 hover:bg-mdc-100 transition-colors">
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 19.5H4.5" />
+                                      </svg>
+                                    </button>
+                                  )}
+                                  {!slot.closed && (
+                                    <button onClick={() => handleMarkAttendance(slot)} title="Mark attendance" className="p-1.5 rounded-lg text-mdc-700 hover:bg-mdc-100 transition-colors">
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                      </svg>
+                                    </button>
+                                  )}
+                                  <button onClick={() => handleToggleSlotClosed(slot)} title={slot.closed ? 'Reopen slot' : 'Close slot'} className="p-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                                    {slot.closed ? (
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                      </svg>
+                                    ) : (
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                  <button onClick={() => handleDeleteSlot(slot)} title="Delete slot" className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="w-5 h-5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                    </svg>
+                                  </button>
                                 </div>
                               </td>
                             </tr>
@@ -2155,13 +2125,9 @@ const App = () => {
                 {/* Left Panel - Profile Details */}
                 <div className="lg:col-span-1 animate-fade-in-up bg-white rounded-3xl shadow-sm border border-mdc-100 p-6 flex flex-col items-center text-center">
                   <div className="relative group mb-4">
-                    {userProfile.photo ? (
-                      <img src={userProfile.photo} alt="Profile" className="w-28 h-28 rounded-full object-cover ring-4 ring-mdc-100 flex-shrink-0" />
-                    ) : (
-                      <div className="w-28 h-28 rounded-full bg-gradient-to-br from-mdc-300 to-mdc-500 text-white flex items-center justify-center text-4xl font-bold flex-shrink-0 shadow-inner">
-                        {userProfile.username ? userProfile.username.charAt(0).toUpperCase() : '?'}
-                      </div>
-                    )}
+                    <div className="w-28 h-28 rounded-full bg-gradient-to-br from-mdc-300 to-mdc-500 text-white flex items-center justify-center text-4xl font-bold flex-shrink-0 shadow-inner ring-4 ring-mdc-100">
+                      {userProfile.username ? userProfile.username.charAt(0).toUpperCase() : '?'}
+                    </div>
                   </div>
 
                   <h3 className="text-xl font-bold text-mdc-900 leading-tight">{userProfile.username}</h3>
@@ -2302,7 +2268,7 @@ const App = () => {
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Slot Name</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Slot Type</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Venue / Room</th>
+                            <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Room</th>
                             <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                           </tr>
                         </thead>
@@ -2313,7 +2279,7 @@ const App = () => {
                                 <td className="px-6 py-3.5 text-sm font-semibold text-gray-700">{slot.slotName}</td>
                                 <td className="px-6 py-3.5 text-sm text-gray-500">{slotTypesMap[normalizeSlotType(slot.slotType)] || slot.slotType}</td>
                                 <td className="px-6 py-3.5 text-sm text-gray-500">{formatDate(slot.date)}</td>
-                                <td className="px-6 py-3.5 text-sm text-gray-500">{slot.venue || 'N/A'}</td>
+                                <td className="px-6 py-3.5 text-sm text-gray-500">{slot.roomNumber || slot.venue || 'N/A'}</td>
                                 <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">
                                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${slot.isPresent
                                     ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
@@ -2455,10 +2421,10 @@ const App = () => {
                 <div className="relative mt-10 group">
                   <div className="absolute -inset-3 bg-gradient-to-br from-white/30 to-mdc-300/30 rounded-[2rem] blur-2xl opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
                   <img
-                    src="/MDCteamphoto.jpg"
-                    alt="MDCteamphoto.jpg"
+                    src="/MDCteamphoto.jpeg"
+                    alt="MDC team photo"
                     className="relative w-full h-auto rounded-2xl shadow-2xl object-cover ring-1 ring-white/30 -rotate-1 transition-transform duration-500 group-hover:rotate-0 group-hover:scale-[1.02]"
-                    onError={(e) => { e.target.onerror = null; e.target.src = '/MDCteamphoto.jpg'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = '/MDCteamphoto.jpeg'; }}
                   />
                 </div>
               </div>
@@ -2486,26 +2452,26 @@ const App = () => {
         </div>
       )}
 
-      {(showCreateSlot || editingSlot) && (
+      {(showCreateSlot || editingSlotMeta) && (
         <div className="fixed inset-0 bg-mdc-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-overlay-in">
           <div className="bg-white rounded-3xl shadow-2xl border border-mdc-100 animate-modal-in p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
             <h3 className="text-xl font-bold text-center mb-4">
-              {editingSlot ? `Mark / Override Attendance: ${editingSlot.slotName}` : "Create & Post Attendance"}
+              {editingSlotMeta ? `Edit Slot: ${editingSlotMeta.slotName}` : "Create Slot"}
             </h3>
             {modalMessage && (
               <div className={`text-center text-sm font-semibold mb-4 ${modalMessage.includes('successfully') ? 'text-green-600 bg-green-50 border border-green-200 rounded-xl p-2' : 'text-red-600 bg-red-50 border border-red-200 rounded-xl p-2'}`}>
                 {modalMessage}
               </div>
             )}
-            <form onSubmit={editingSlot ? handleEditSlot : handleCreateSlot} className="flex-grow overflow-y-auto pr-2 space-y-4">
+            <form onSubmit={editingSlotMeta ? handleEditSlot : handleCreateSlot} className="flex-grow overflow-y-auto pr-2 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Meeting / Slot Type <span className="text-red-500">*</span></label>
                   <CustomSelect
-                    value={editingSlot ? editingSlot.slotType : newSlotForm.slotType}
+                    value={editingSlotMeta ? editingSlotMeta.slotType : newSlotForm.slotType}
                     onChange={(val) => {
-                      if (editingSlot) {
-                        setEditingSlot({ ...editingSlot, slotType: val });
+                      if (editingSlotMeta) {
+                        setEditingSlotMeta({ ...editingSlotMeta, slotType: val });
                       } else {
                         setNewSlotForm({ ...newSlotForm, slotType: val });
                       }
@@ -2518,14 +2484,14 @@ const App = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Name <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Slot Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     placeholder="Event or Meet Name"
-                    value={editingSlot ? editingSlot.slotName : newSlotForm.slotName}
+                    value={editingSlotMeta ? editingSlotMeta.slotName : newSlotForm.slotName}
                     onChange={(e) => {
-                      if (editingSlot) {
-                        setEditingSlot({ ...editingSlot, slotName: e.target.value });
+                      if (editingSlotMeta) {
+                        setEditingSlotMeta({ ...editingSlotMeta, slotName: e.target.value });
                       } else {
                         setNewSlotForm({ ...newSlotForm, slotName: e.target.value });
                       }
@@ -2538,10 +2504,10 @@ const App = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Date <span className="text-red-500">*</span></label>
                   <input
                     type="date"
-                    value={editingSlot ? editingSlot.date : newSlotForm.date}
+                    value={editingSlotMeta ? editingSlotMeta.date : newSlotForm.date}
                     onChange={(e) => {
-                      if (editingSlot) {
-                        setEditingSlot({ ...editingSlot, date: e.target.value });
+                      if (editingSlotMeta) {
+                        setEditingSlotMeta({ ...editingSlotMeta, date: e.target.value });
                       } else {
                         setNewSlotForm({ ...newSlotForm, date: e.target.value });
                       }
@@ -2551,146 +2517,139 @@ const App = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Room Number / Venue <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Room Number</label>
                   <input
                     type="text"
                     placeholder="e.g. Room 204 or Auditorium"
-                    value={editingSlot ? editingSlot.venue : newSlotForm.venue}
+                    value={editingSlotMeta ? (editingSlotMeta.roomNumber ?? editingSlotMeta.venue ?? '') : newSlotForm.roomNumber}
                     onChange={(e) => {
-                      if (editingSlot) {
-                        setEditingSlot({ ...editingSlot, venue: e.target.value });
+                      if (editingSlotMeta) {
+                        setEditingSlotMeta({ ...editingSlotMeta, roomNumber: e.target.value });
                       } else {
-                        setNewSlotForm({ ...newSlotForm, venue: e.target.value });
+                        setNewSlotForm({ ...newSlotForm, roomNumber: e.target.value });
                       }
                     }}
                     className="w-full p-3 rounded-xl bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors text-sm shadow-sm"
-                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Start Time</label>
+                  <input
+                    type="time"
+                    value={editingSlotMeta ? (editingSlotMeta.startTime || '') : newSlotForm.startTime}
+                    onChange={(e) => {
+                      if (editingSlotMeta) {
+                        setEditingSlotMeta({ ...editingSlotMeta, startTime: e.target.value });
+                      } else {
+                        setNewSlotForm({ ...newSlotForm, startTime: e.target.value });
+                      }
+                    }}
+                    className="w-full p-3 rounded-xl bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors text-sm shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">End Time</label>
+                  <input
+                    type="time"
+                    value={editingSlotMeta ? (editingSlotMeta.endTime || '') : newSlotForm.endTime}
+                    onChange={(e) => {
+                      if (editingSlotMeta) {
+                        setEditingSlotMeta({ ...editingSlotMeta, endTime: e.target.value });
+                      } else {
+                        setNewSlotForm({ ...newSlotForm, endTime: e.target.value });
+                      }
+                    }}
+                    className="w-full p-3 rounded-xl bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors text-sm shadow-sm"
                   />
                 </div>
               </div>
 
-              {/* Domain Selection */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  {(editingSlot ? editingSlot.slotType : newSlotForm.slotType) === 'Domain Meeting'
-                    ? 'Select Domain'
-                    : 'Participating Domains'
-                  }
-                </label>
-                {(editingSlot ? editingSlot.slotType : newSlotForm.slotType) === 'Domain Meeting' ? (
-                  <CustomSelect
-                    value={selectedDomains[0] || ''}
-                    onChange={(val) => setSelectedDomains(val ? [val] : [])}
-                    options={[
-                      { value: '', label: 'Select Domain' },
-                      ...domains.map(d => ({ value: d, label: d }))
-                    ]}
-                  />
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-mdc-50 p-3 rounded-2xl border border-mdc-100">
-                    {domains.map(d => (
-                      <label key={d} className="inline-flex items-center space-x-2 cursor-pointer p-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedDomains.includes(d)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedDomains(prev => [...prev, d]);
-                            } else {
-                              setSelectedDomains(prev => prev.filter(item => item !== d));
-                            }
-                          }}
-                          className="h-4 w-4 text-mdc-700 border-mdc-300 rounded"
-                        />
-                        <span className="text-sm text-gray-700 font-medium">{d}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description <span className="text-gray-400 font-normal">(optional)</span></label>
+                <textarea
+                  rows={2}
+                  placeholder="Any additional context for this slot"
+                  value={editingSlotMeta ? (editingSlotMeta.description || '') : newSlotForm.description}
+                  onChange={(e) => {
+                    if (editingSlotMeta) {
+                      setEditingSlotMeta({ ...editingSlotMeta, description: e.target.value });
+                    } else {
+                      setNewSlotForm({ ...newSlotForm, description: e.target.value });
+                    }
+                  }}
+                  className="w-full p-3 rounded-xl bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors text-sm shadow-sm resize-none"
+                />
               </div>
 
-              {/* Attendance Table */}
+              {/* Eligible Members */}
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-sm font-bold text-mdc-900">Mark Attendance for Selected Members</h4>
-                  <div className="flex space-x-2 text-xs font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, isPresent: true })))}
-                      className="text-green-600 hover:text-green-700"
-                    >
-                      All Present
-                    </button>
-                    <span className="text-gray-300">|</span>
-                    <button
-                      type="button"
-                      onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, isPresent: false })))}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      All Absent
-                    </button>
-                    {editingSlot && (
-                      <>
-                        <span className="text-gray-300">|</span>
-                        <button
-                          type="button"
-                          onClick={handleExportAttendance}
-                          className="text-mdc-700 hover:text-mdc-900"
-                        >
-                          Export
-                        </button>
-                        <span className="text-gray-300">|</span>
-                        <label className="text-mdc-700 hover:text-mdc-900 cursor-pointer">
-                          Import
-                          <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleImportCSV}
-                            className="hidden"
-                          />
-                        </label>
-                      </>
-                    )}
-                  </div>
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
+                  <h4 className="text-sm font-bold text-mdc-900">Eligible Members</h4>
+                  <span className="text-xs font-semibold text-mdc-700 bg-mdc-50 px-2.5 py-1 rounded-full">
+                    {eligibleMemberIds.length} of {allUsers.filter(u => u.status === 'active').length} Members Selected
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <input
+                    type="text"
+                    placeholder="Search by name or registration number..."
+                    value={eligibleMemberSearch}
+                    onChange={(e) => setEligibleMemberSearch(e.target.value)}
+                    className="flex-1 min-w-[10rem] p-2.5 rounded-lg bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEligibleMemberIds(allUsers.filter(u => u.status === 'active').map(u => u.id))}
+                    className="text-xs font-semibold text-mdc-700 hover:text-mdc-900"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setEligibleMemberIds([])}
+                    className="text-xs font-semibold text-red-600 hover:text-red-700"
+                  >
+                    Deselect All
+                  </button>
                 </div>
 
                 <div className="max-h-60 overflow-y-auto border border-mdc-200 rounded-2xl divide-y divide-mdc-100 bg-white">
-                  {slotAttendance.length > 0 ? (
-                    slotAttendance.map(user => (
-                      <div key={user.id} className="flex items-center justify-between p-3 hover:bg-mdc-50/50 transition-colors">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-gray-800">{user.username}</span>
-                          <span className="text-xs text-gray-500 font-medium">{user.domain} • {user.position}</span>
+                  {(() => {
+                    const activeMembers = allUsers.filter(u => u.status === 'active');
+                    const term = eligibleMemberSearch.trim().toLowerCase();
+                    const visibleMembers = term
+                      ? activeMembers.filter(u => u.username.toLowerCase().includes(term) || (u.regNo || '').toLowerCase().includes(term))
+                      : activeMembers;
+                    if (visibleMembers.length === 0) {
+                      return (
+                        <div className="p-8 text-center text-sm font-medium text-gray-400 bg-gray-50">
+                          No members match your search.
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <label className="inline-flex items-center space-x-1.5 cursor-pointer">
+                      );
+                    }
+                    return visibleMembers.map(user => {
+                      const checked = eligibleMemberIds.includes(user.id);
+                      return (
+                        <label key={user.id} className="flex items-center justify-between gap-3 p-3 hover:bg-mdc-50/50 transition-colors cursor-pointer">
+                          <span className="flex items-center gap-3 min-w-0">
                             <input
-                              type="radio"
-                              name={`modal-status-${user.id}`}
-                              checked={user.isPresent}
-                              onChange={() => setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, isPresent: true } : u))}
-                              className="custom-radio custom-radio-green"
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                setEligibleMemberIds(prev => e.target.checked ? [...prev, user.id] : prev.filter(id => id !== user.id));
+                              }}
+                              className="h-4 w-4 text-mdc-700 border-mdc-300 rounded flex-shrink-0"
                             />
-                            <span className="text-xs font-bold text-gray-600">Present</span>
-                          </label>
-                          <label className="inline-flex items-center space-x-1.5 cursor-pointer">
-                            <input
-                              type="radio"
-                              name={`modal-status-${user.id}`}
-                              checked={!user.isPresent}
-                              onChange={() => setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, isPresent: false } : u))}
-                              className="custom-radio custom-radio-red"
-                            />
-                            <span className="text-xs font-bold text-gray-600">Absent</span>
-                          </label>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-8 text-center text-sm font-medium text-gray-400 bg-gray-50">
-                      No members selected. Please choose participating domains above.
-                    </div>
-                  )}
+                            <span className="flex flex-col min-w-0">
+                              <span className="text-sm font-semibold text-gray-800 truncate">{user.username}</span>
+                              <span className="text-xs text-gray-500 font-medium">{user.regNo} • {user.domain} • {user.position}</span>
+                            </span>
+                          </span>
+                        </label>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
 
@@ -2699,8 +2658,139 @@ const App = () => {
                   type="button"
                   onClick={() => {
                     setShowCreateSlot(false);
-                    setEditingSlot(null);
-                    setSelectedDomains([]);
+                    setEditingSlotMeta(null);
+                    setEligibleMemberIds([]);
+                    setEligibleMemberSearch('');
+                    setModalMessage('');
+                  }}
+                  className="py-2.5 px-5 bg-mdc-100 hover:bg-mdc-200 text-mdc-900 font-bold rounded-xl active:scale-[0.98] transition-all text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="py-2.5 px-6 bg-gradient-to-r from-mdc-700 to-mdc-900 hover:from-mdc-900 hover:to-mdc-900 disabled:opacity-60 text-white font-bold rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all text-sm"
+                >
+                  {isSaving ? 'Saving…' : (editingSlotMeta ? 'Save Changes' : 'Create Slot')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {markingAttendanceSlot && (
+        <div className="fixed inset-0 bg-mdc-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-overlay-in">
+          <div className="bg-white rounded-3xl shadow-2xl border border-mdc-100 animate-modal-in p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <h3 className="text-xl font-bold text-center mb-4">
+              Mark Attendance: {markingAttendanceSlot.slotName}
+            </h3>
+            {modalMessage && (
+              <div className={`text-center text-sm font-semibold mb-4 ${modalMessage.includes('successfully') ? 'text-green-600 bg-green-50 border border-green-200 rounded-xl p-2' : 'text-red-600 bg-red-50 border border-red-200 rounded-xl p-2'}`}>
+                {modalMessage}
+              </div>
+            )}
+            <form onSubmit={handleSaveAttendance} className="flex-grow overflow-y-auto pr-2 space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="Search members..."
+                  value={attendanceSearchTerm}
+                  onChange={(e) => setAttendanceSearchTerm(e.target.value)}
+                  className="flex-1 min-w-[10rem] p-2.5 rounded-lg bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors text-sm"
+                />
+                <CustomMultiSelect
+                  className="w-40"
+                  allLabel="All Domains"
+                  value={attendanceFilterDomain}
+                  onChange={(val) => setAttendanceFilterDomain(val)}
+                  options={domains.map(d => ({ value: d, label: d }))}
+                />
+                <CustomMultiSelect
+                  className="w-40"
+                  allLabel="All Positions"
+                  value={attendanceFilterPosition}
+                  onChange={(val) => setAttendanceFilterPosition(val)}
+                  options={positions.map(p => ({ value: p, label: p }))}
+                />
+              </div>
+
+              <div className="flex justify-between items-center">
+                <p className="text-xs font-semibold text-gray-500">
+                  <span className="text-green-600">{presentCount} Present</span> · <span className="text-red-600">{absentCount} Absent</span>
+                </p>
+                <div className="flex space-x-2 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, isPresent: true })))}
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    All Present
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, isPresent: false })))}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    All Absent
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    type="button"
+                    onClick={handleExportAttendance}
+                    className="text-mdc-700 hover:text-mdc-900"
+                  >
+                    Export
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-h-60 overflow-y-auto border border-mdc-200 rounded-2xl divide-y divide-mdc-100 bg-white">
+                {filteredAttendanceList.length > 0 ? (
+                  filteredAttendanceList.map(user => (
+                    <div key={user.id} className="flex items-center justify-between p-3 hover:bg-mdc-50/50 transition-colors">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-gray-800">{user.username}</span>
+                        <span className="text-xs text-gray-500 font-medium">{user.domain} • {user.position}</span>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <label className="inline-flex items-center space-x-1.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`modal-status-${user.id}`}
+                            checked={user.isPresent}
+                            onChange={() => setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, isPresent: true } : u))}
+                            className="custom-radio custom-radio-green"
+                          />
+                          <span className="text-xs font-bold text-gray-600">Present</span>
+                        </label>
+                        <label className="inline-flex items-center space-x-1.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`modal-status-${user.id}`}
+                            checked={!user.isPresent}
+                            onChange={() => setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, isPresent: false } : u))}
+                            className="custom-radio custom-radio-red"
+                          />
+                          <span className="text-xs font-bold text-gray-600">Absent</span>
+                        </label>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-sm font-medium text-gray-400 bg-gray-50">
+                    No eligible members match your search.
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-mdc-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMarkingAttendanceSlot(null);
                     setSlotAttendance([]);
                     setModalMessage('');
                   }}
@@ -2712,7 +2802,7 @@ const App = () => {
                   type="submit"
                   className="py-2.5 px-6 bg-gradient-to-r from-mdc-700 to-mdc-900 hover:from-mdc-900 hover:to-mdc-900 text-white font-bold rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all text-sm"
                 >
-                  {editingSlot ? 'Save Overrides' : 'Post Attendance'}
+                  Save Attendance
                 </button>
               </div>
             </form>
@@ -2720,6 +2810,50 @@ const App = () => {
         </div>
       )}
 
+      {viewingSlot && (
+        <div className="fixed inset-0 bg-mdc-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-overlay-in">
+          <div className="bg-white rounded-3xl shadow-2xl border border-mdc-100 animate-modal-in p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">{viewingSlot.slotName}</h3>
+              <button onClick={() => setViewingSlot(null)} className="text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4 text-sm">
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Type</p><p className="font-medium text-gray-700 mt-0.5">{viewingSlot.slotType}</p></div>
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Date</p><p className="font-medium text-gray-700 mt-0.5">{formatDate(viewingSlot.date)}</p></div>
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Timings</p><p className="font-medium text-gray-700 mt-0.5">{formatSlotTiming(viewingSlot)}</p></div>
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Room</p><p className="font-medium text-gray-700 mt-0.5">{viewingSlot.roomNumber || viewingSlot.venue || 'N/A'}</p></div>
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Status</p><p className="font-medium text-gray-700 mt-0.5">{viewingSlot.closed ? 'Closed' : 'Open'}</p></div>
+              {viewingSlot.description && (
+                <div className="col-span-2 sm:col-span-3"><p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Description</p><p className="font-medium text-gray-700 mt-0.5">{viewingSlot.description}</p></div>
+              )}
+            </div>
+            <h4 className="text-sm font-bold text-mdc-900 mb-2">Eligible Members ({resolveEligibleUserIds(viewingSlot).length})</h4>
+            <div className="overflow-y-auto border border-mdc-200 rounded-2xl divide-y divide-mdc-100 bg-white">
+              {resolveEligibleUserIds(viewingSlot).map(id => {
+                const user = allUsers.find(u => u.id === id);
+                const record = (viewingSlot.attendance || []).find(a => a.userId === id);
+                const isPresent = record ? record.isPresent : false;
+                return (
+                  <div key={id} className="flex items-center justify-between p-3">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800">{user?.username || record?.username || 'Unknown member'}</span>
+                      <span className="text-xs text-gray-500 font-medium">{user?.domain || record?.domain} • {user?.position || record?.position}</span>
+                    </div>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${isPresent ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${isPresent ? 'bg-green-500' : 'bg-red-500'}`} />
+                      {isPresent ? 'Present' : 'Absent'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {editingUser && (
@@ -2752,9 +2886,14 @@ const App = () => {
                 onChange={(val) => setEditingUser({ ...editingUser, position: val })}
                 options={[{ value: '', label: 'Select Position' }, ...positions.map(p => ({ value: p, label: p }))]}
               />
+              <CustomSelect
+                value={editingUser.stayType || ''}
+                onChange={(val) => setEditingUser({ ...editingUser, stayType: val })}
+                options={[{ value: '', label: 'Day Scholar / Hosteller' }, ...stayTypes.map(s => ({ value: s, label: s }))]}
+              />
               <div className="flex justify-end space-x-4 mt-4">
                 <button type="button" onClick={() => setEditingUser(null)} className="py-2 px-4 bg-mdc-200 hover:bg-mdc-300 text-mdc-900 font-semibold rounded-full active:scale-[0.98] transition-all">Cancel</button>
-                <button type="submit" className="py-2 px-4 bg-gradient-to-r from-mdc-500 to-mdc-700 hover:from-mdc-700 hover:to-mdc-900 text-white font-semibold rounded-full shadow-md shadow-mdc-900/20 hover:shadow-lg active:scale-[0.98] transition-all">Save Changes</button>
+                <button type="submit" disabled={isSaving} className="py-2 px-4 bg-gradient-to-r from-mdc-500 to-mdc-700 hover:from-mdc-700 hover:to-mdc-900 disabled:opacity-60 text-white font-semibold rounded-full shadow-md shadow-mdc-900/20 hover:shadow-lg active:scale-[0.98] transition-all">{isSaving ? 'Saving…' : 'Save Changes'}</button>
               </div>
             </form>
           </div>
@@ -2791,24 +2930,16 @@ const App = () => {
                 onChange={(val) => setNewUser({ ...newUser, position: val })}
                 options={[{ value: '', label: 'Select Position' }, ...positions.map(p => ({ value: p, label: p }))]}
               />
+              <CustomSelect
+                value={newUser.stayType || ''}
+                onChange={(val) => setNewUser({ ...newUser, stayType: val })}
+                options={[{ value: '', label: 'Day Scholar / Hosteller' }, ...stayTypes.map(s => ({ value: s, label: s }))]}
+              />
               <div className="flex justify-end space-x-4 mt-4">
                 <button type="button" onClick={() => { setNewUser(null); setModalMessage(''); }} className="py-2 px-4 bg-mdc-200 hover:bg-mdc-300 text-mdc-900 font-semibold rounded-full active:scale-[0.98] transition-all">Cancel</button>
-                <button type="submit" className="py-2 px-4 bg-gradient-to-r from-mdc-500 to-mdc-700 hover:from-mdc-700 hover:to-mdc-900 text-white font-semibold rounded-full shadow-md shadow-mdc-900/20 hover:shadow-lg active:scale-[0.98] transition-all">Add Member</button>
+                <button type="submit" disabled={isSaving} className="py-2 px-4 bg-gradient-to-r from-mdc-500 to-mdc-700 hover:from-mdc-700 hover:to-mdc-900 disabled:opacity-60 text-white font-semibold rounded-full shadow-md shadow-mdc-900/20 hover:shadow-lg active:scale-[0.98] transition-all">{isSaving ? 'Saving…' : 'Add Member'}</button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {deletingUser && (
-        <div className="fixed inset-0 bg-mdc-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-overlay-in">
-          <div className="bg-white rounded-3xl shadow-2xl shadow-mdc-900/10 border border-mdc-100 animate-modal-in p-6 w-full max-w-sm text-center">
-            <h3 className="text-xl font-bold mb-4">Confirm Deletion</h3>
-            <p className="mb-4">Are you sure you want to delete user "{deletingUser.username}"? This action cannot be undone.</p>
-            <div className="flex justify-center space-x-4">
-              <button onClick={() => setDeletingUser(null)} className="py-2 px-4 bg-mdc-200 hover:bg-mdc-300 text-mdc-900 font-semibold rounded-full active:scale-[0.98] transition-all">Cancel</button>
-              <button onClick={confirmDelete} className="py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full shadow-lg transition-colors">Delete</button>
-            </div>
           </div>
         </div>
       )}
@@ -2970,83 +3101,6 @@ const App = () => {
                 );
               })()}
             </div>
-          </div>
-        </div>
-      )}
-
-      {showEditProfileModal && userProfile && (
-        <div className="fixed inset-0 bg-mdc-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-overlay-in">
-          <div className="bg-white rounded-3xl shadow-2xl shadow-mdc-900/10 border border-mdc-100 animate-modal-in p-6 w-full max-w-md max-h-screen overflow-y-auto">
-            <div className="text-center mb-5">
-              <h3 className="text-xl font-bold tracking-tight text-mdc-900">Edit Your Profile</h3>
-              <p className="mt-1 text-sm text-gray-500">Keep your details up to date for accurate attendance tracking.</p>
-            </div>
-            {modalMessage && (
-              <div className={`text-center text-sm font-medium mb-4 ${modalMessage.includes('successfully') ? 'text-green-500' : 'text-red-500'}`}>
-                {modalMessage}
-              </div>
-            )}
-            <form onSubmit={handleEditProfile} className="space-y-4">
-              <div className="flex justify-center mb-4">
-                {userProfile.photo ? (
-                  <img src={userProfile.photo} alt="Profile" className="w-24 h-24 rounded-full object-cover" />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-mdc-300 text-mdc-900 flex items-center justify-center text-4xl font-bold">{userProfile.username.charAt(0).toUpperCase()}</div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-                <input type="text" value={userProfile.username || ''} onChange={(e) => setUserProfile({ ...userProfile, username: e.target.value })} className="w-full p-3 rounded-lg bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                <input type="email" value={userProfile.email || ''} onChange={(e) => setUserProfile({ ...userProfile, email: e.target.value })} className="w-full p-3 rounded-lg bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Contact Number</label>
-                <input type="tel" value={userProfile.contact || ''} onChange={(e) => setUserProfile({ ...userProfile, contact: e.target.value })} className="w-full p-3 rounded-lg bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Year of Study</label>
-                <CustomSelect
-                  value={userProfile.year || ''}
-                  onChange={(val) => setUserProfile({ ...userProfile, year: val })}
-                  options={years.map(y => ({ value: y, label: y }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Registration Number</label>
-                <input type="text" value={userProfile.regNo || ''} onChange={(e) => setUserProfile({ ...userProfile, regNo: e.target.value })} className="w-full p-3 rounded-lg bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Program</label>
-                <input type="text" placeholder="Enter your program" value={userProfile.program} onChange={(e) => setUserProfile({ ...userProfile, program: e.target.value })} className="w-full p-3 rounded-lg bg-white border border-mdc-300 focus:outline-none focus:ring-2 focus:ring-mdc-500 focus:border-transparent transition-colors" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Domain</label>
-                <CustomSelect
-                  value={userProfile.domain || ''}
-                  onChange={(val) => setUserProfile({ ...userProfile, domain: val })}
-                  options={domains.map(d => ({ value: d, label: d }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Position</label>
-                <CustomSelect
-                  value={userProfile.position || ''}
-                  onChange={(val) => setUserProfile({ ...userProfile, position: val })}
-                  options={positions.map(p => ({ value: p, label: p }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Change Photo</label>
-                <input type="file" onChange={handlePhotoUpload} className="mt-1 block w-full text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-mdc-100 file:text-mdc-900 hover:file:bg-mdc-200" />
-              </div>
-              <div className="flex justify-end space-x-4 mt-4">
-                <button type="button" onClick={() => setShowEditProfileModal(false)} className="py-2 px-4 bg-mdc-200 hover:bg-mdc-300 text-mdc-900 font-semibold rounded-full active:scale-[0.98] transition-all">Cancel</button>
-                <button type="submit" className="py-2 px-4 bg-gradient-to-r from-mdc-500 to-mdc-700 hover:from-mdc-700 hover:to-mdc-900 text-white font-semibold rounded-full shadow-md shadow-mdc-900/20 hover:shadow-lg active:scale-[0.98] transition-all">Save Changes</button>
-              </div>
-            </form>
           </div>
         </div>
       )}
