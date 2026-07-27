@@ -291,44 +291,27 @@ const TEAM_2026_27 = [
   { username: "ANIKETH KUMAR YADAV", email: "ayadav8@student.gitam.edu", regNo: "2025466212", contact: "7579861571", year: "2nd year", program: "BTECH-CSE AIML", domain: "PR", position: "Member", isAdmin: false, status: "active", photo: null }
 ];
 
-const MOCK_USERS = TEAM_2026_27.map((user, index) => ({
-  id: `u${index + 1}`,
-  ...user
-}));
-
-// Active roster eligible for every mock slot below.
-const MOCK_ELIGIBLE_IDS = MOCK_USERS.map(user => user.id);
-
-// Per-user attendance across the 7 mock slots, in date order.
-const MOCK_ATTENDANCE_BY_USER = MOCK_USERS.reduce((acc, user, index) => {
-  acc[user.id] = [
-    index % 3 !== 0,
-    index % 4 !== 0,
-    index % 5 !== 0,
-    true,
-    index % 6 !== 0,
-    true,
-    index % 2 === 0
-  ];
-  return acc;
-}, {});
-
-const MOCK_SLOT_META = [
-  { slotType: 'Event', slotName: 'Orientation Meetup', date: '2026-06-01', venue: 'Main Auditorium', timings: '4:00 PM - 5:30 PM' },
-  { slotType: 'Domain Meeting', slotName: 'WebArcs Domain Sync', date: '2026-06-08', venue: 'Room 204', timings: '5:00 PM - 6:00 PM' },
-  { slotType: 'Core Team Meeting', slotName: 'Core Team Sync', date: '2026-06-15', venue: 'Conference Hall', timings: '6:00 PM - 7:00 PM' },
-  { slotType: 'Event', slotName: 'Hackathon Kickoff', date: '2026-06-22', venue: 'Innovation Lab', timings: '3:00 PM - 6:00 PM' },
-  { slotType: 'Domain Meeting', slotName: 'DataVerse Deep Dive', date: '2026-06-29', venue: 'Room 204', timings: '5:00 PM - 6:00 PM' },
-  { slotType: 'Core Team Meeting', slotName: 'Monthly Review', date: '2026-07-05', venue: 'Conference Hall', timings: '6:00 PM - 7:00 PM' },
-  { slotType: 'Event', slotName: 'Tech Talk: Cloud Native', date: '2026-07-12', venue: 'Main Auditorium', timings: '4:00 PM - 5:30 PM' },
+// Small, clearly-fictional dataset for local preview only (Firebase not configured /
+// the NODE_ENV dev-bypass buttons). Deliberately NOT derived from TEAM_2026_27 so no
+// real member data (names, emails, phone numbers) ever ends up in this fallback path.
+const DEV_MOCK_USERS = [
+  { id: 'dev-admin', username: 'Demo Admin', email: 'demo.admin@example.com', regNo: 'DEV-ADMIN-01', contact: '', year: '4th year', program: 'Demo Program', domain: 'EB', position: 'President', isAdmin: true, status: 'active', photo: null },
+  { id: 'dev-member', username: 'Demo Member', email: 'demo.member@example.com', regNo: 'DEV-MEMBER-01', contact: '', year: '2nd year', program: 'Demo Program', domain: 'WebArcs', position: 'Member', isAdmin: false, status: 'active', photo: null },
 ];
 
-const MOCK_ATTENDANCE_SLOTS = MOCK_SLOT_META.map((meta, i) => ({
-  id: `s${i + 1}`,
-  ...meta,
-  eligibleUserIds: MOCK_ELIGIBLE_IDS,
-  attendance: MOCK_ELIGIBLE_IDS.map(userId => ({ userId, isPresent: MOCK_ATTENDANCE_BY_USER[userId][i] })),
-}));
+const DEV_MOCK_SLOTS = [
+  {
+    id: 'dev-slot-1',
+    slotType: 'Event',
+    slotName: 'Sample Event',
+    date: new Date().toISOString().slice(0, 10),
+    venue: 'Sample Venue',
+    timings: '4:00 PM - 5:00 PM',
+    eligibleUserIds: DEV_MOCK_USERS.map(u => u.id),
+    attendance: DEV_MOCK_USERS.map(u => ({ userId: u.id, isPresent: true })),
+    attendanceTaken: true,
+  },
+];
 
 const App = () => {
   // State for Firebase services and user information
@@ -368,7 +351,7 @@ const App = () => {
   const [newSlotForm, setNewSlotForm] = useState({ slotType: 'Event', slotName: '', date: '', venue: '', timings: '' });
   const [editingSlot, setEditingSlot] = useState(null);
   const [selectedDomains, setSelectedDomains] = useState([]);
-  const [slotAttendance, setSlotAttendance] = useState([]); // Array of { id, username, email, domain, position, isPresent }
+  const [slotAttendance, setSlotAttendance] = useState([]); // Array of { id, username, email, domain, position, isPresent, included }
   const [loginRegNo, setLoginRegNo] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
   const [attendanceSearchTerm, setAttendanceSearchTerm] = useState('');
@@ -466,7 +449,7 @@ const App = () => {
             setIsAdmin(true);
             setView('adminDashboard');
           } else {
-            const mockUser = MOCK_USERS.find(
+            const mockUser = DEV_MOCK_USERS.find(
               u => u.regNo.toLowerCase() === session.regNo.toLowerCase() &&
                 u.email.toLowerCase() === session.email.toLowerCase()
             );
@@ -549,8 +532,8 @@ const App = () => {
     if (!firebaseNotConfigured || (!isAdmin && !userProfile)) {
       return;
     }
-    setAllUsers(MOCK_USERS);
-    setAttendanceSlots(MOCK_ATTENDANCE_SLOTS);
+    setAllUsers(DEV_MOCK_USERS);
+    setAttendanceSlots(DEV_MOCK_SLOTS);
   }, [firebaseNotConfigured, isAdmin, userProfile]);
 
   // Set default selected domains based on slot type
@@ -591,7 +574,12 @@ const App = () => {
   useEffect(() => {
     if (!showCreateSlot && !editingSlot) return;
 
-    const filteredActiveUsers = allUsers.filter(u => u.status === 'active' && selectedDomains.includes(u.domain));
+    const eligibleIds = editingSlot ? editingSlot.eligibleUserIds : null;
+    const filteredActiveUsers = allUsers.filter(u =>
+      u.status === 'active' &&
+      selectedDomains.includes(u.domain) &&
+      (!eligibleIds || eligibleIds.length === 0 || eligibleIds.includes(u.id))
+    );
 
     setSlotAttendance(prev => {
       return filteredActiveUsers.map(user => {
@@ -610,7 +598,8 @@ const App = () => {
               email: user.email,
               domain: user.domain,
               position: user.position,
-              isPresent: savedRecord.isPresent
+              isPresent: savedRecord.isPresent,
+              included: true
             };
           }
         }
@@ -621,7 +610,8 @@ const App = () => {
           email: user.email,
           domain: user.domain,
           position: user.position,
-          isPresent: false
+          isPresent: false,
+          included: true
         };
       });
     });
@@ -800,7 +790,7 @@ const App = () => {
     }
 
     if (firebaseNotConfigured) {
-      const mockUser = MOCK_USERS.find(
+      const mockUser = DEV_MOCK_USERS.find(
         u => u.regNo.toLowerCase() === regNo.toLowerCase() &&
           u.email.toLowerCase() === email
       );
@@ -861,14 +851,14 @@ const App = () => {
     setMessage('');
     if (asAdmin) {
       setIsAdmin(true);
-      const mockAdmin = MOCK_USERS.find(u => u.domain === 'EB') || { id: 'u2', username: 'Aarav Mehta', email: 'aarav.mehta@student.gitam.edu', regNo: '20BCE1042', domain: 'EB', isAdmin: true, status: 'active' };
+      const mockAdmin = DEV_MOCK_USERS.find(u => u.isAdmin);
       setUserProfile(mockAdmin);
       localStorage.setItem('mdc_user_session', JSON.stringify({ regNo: mockAdmin.regNo, email: mockAdmin.email }));
       setView('adminDashboard');
       setAdminView('dashboard');
     } else {
       setIsAdmin(false);
-      const mockMember = MOCK_USERS.find(u => u.id === 'u1');
+      const mockMember = DEV_MOCK_USERS.find(u => !u.isAdmin);
       setUserProfile(mockMember);
       localStorage.setItem('mdc_user_session', JSON.stringify({ regNo: mockMember.regNo, email: mockMember.email }));
       setView('userDashboard');
@@ -1050,7 +1040,7 @@ const App = () => {
 
   const handleSeedTeam = async () => {
     if (firebaseNotConfigured) {
-      setAllUsers(MOCK_USERS);
+      setAllUsers(TEAM_2026_27.map((user, index) => ({ id: `u${index + 1}`, ...user })));
       setMessage("Local mock database seeded with 2026-27 team.");
       setTimeout(() => setMessage(''), 3000);
       return;
@@ -1179,48 +1169,60 @@ const App = () => {
   // Handle admin actions (attendance slots)
   const handleCreateSlot = async (e) => {
     e.preventDefault();
-    if (!db || !isAdmin) return;
+    if (!firebaseNotConfigured && (!db || !isAdmin)) return;
 
     if (!newSlotForm.slotType || !newSlotForm.slotName || !newSlotForm.date) {
       setModalMessage("Slot Type, Slot Name, and Date are mandatory.");
       return;
     }
 
-    if (slotAttendance.length === 0) {
+    const eligibleAttendance = slotAttendance.filter(u => u.included !== false);
+
+    if (eligibleAttendance.length === 0) {
       setModalMessage("Please select at least one participating domain with active members.");
+      return;
+    }
+
+    const attendanceToSave = eligibleAttendance.map(user => ({
+      userId: user.id,
+      isPresent: user.isPresent,
+      username: user.username,
+      domain: user.domain,
+      position: user.position,
+    }));
+
+    const newSlotData = {
+      slotType: newSlotForm.slotType,
+      slotName: newSlotForm.slotName,
+      date: newSlotForm.date,
+      venue: newSlotForm.venue || '',
+      timings: newSlotForm.timings || '',
+      selectedDomains: selectedDomains,
+      eligibleUserIds: eligibleAttendance.map(u => u.id),
+      attendance: attendanceToSave,
+      attendanceTaken: false,
+    };
+
+    if (firebaseNotConfigured) {
+      const newSlot = { id: `mock-${Date.now()}`, ...newSlotData };
+      setAttendanceSlots(prev => [...prev, newSlot]);
+      setNewSlotForm({ slotType: 'Event', slotName: '', date: '', venue: '', timings: '' });
+      setShowCreateSlot(false);
+      handleMarkAttendance(newSlot);
       return;
     }
 
     try {
       const slotsCollectionPath = `/artifacts/${appId}/public/data/attendance_slots`;
-      const attendanceToSave = slotAttendance.map(user => ({
-        userId: user.id,
-        isPresent: user.isPresent,
-        username: user.username,
-        domain: user.domain,
-        position: user.position,
-      }));
 
-      await addDoc(collection(db, slotsCollectionPath), {
-        slotType: newSlotForm.slotType,
-        slotName: newSlotForm.slotName,
-        date: newSlotForm.date,
-        venue: newSlotForm.venue || '',
-        timings: newSlotForm.timings || '',
-        selectedDomains: selectedDomains,
-        eligibleUserIds: slotAttendance.map(u => u.id),
-        attendance: attendanceToSave,
+      const docRef = await addDoc(collection(db, slotsCollectionPath), {
+        ...newSlotData,
         createdAt: serverTimestamp(),
       });
 
-      setModalMessage("Attendance slot created and posted successfully.");
       setNewSlotForm({ slotType: 'Event', slotName: '', date: '', venue: '', timings: '' });
-      setSelectedDomains([]);
-      setSlotAttendance([]);
-      setTimeout(() => {
-        setShowCreateSlot(false);
-        setModalMessage('');
-      }, 1000);
+      setShowCreateSlot(false);
+      handleMarkAttendance({ id: docRef.id, ...newSlotData });
     } catch (e) {
       console.error("Error creating slot:", e.message);
       setModalMessage("Failed to create attendance slot. Please try again.");
@@ -1229,22 +1231,46 @@ const App = () => {
 
   const handleEditSlot = async (e) => {
     e.preventDefault();
-    if (!db || !isAdmin || !editingSlot) return;
+    if (!firebaseNotConfigured && (!db || !isAdmin || !editingSlot)) return;
 
     if (slotAttendance.length === 0) {
       setModalMessage("Please select at least one participating domain with active members.");
       return;
     }
 
+    const attendanceToSave = slotAttendance.map(user => ({
+      userId: user.id,
+      isPresent: user.isPresent,
+      username: user.username,
+      domain: user.domain,
+      position: user.position,
+    }));
+
+    if (firebaseNotConfigured) {
+      setAttendanceSlots(prev => prev.map(s => s.id === editingSlot.id ? {
+        ...s,
+        slotType: editingSlot.slotType,
+        slotName: editingSlot.slotName,
+        date: editingSlot.date,
+        venue: editingSlot.venue || '',
+        timings: editingSlot.timings || '',
+        selectedDomains: selectedDomains,
+        eligibleUserIds: slotAttendance.map(u => u.id),
+        attendance: attendanceToSave,
+        attendanceTaken: true,
+      } : s));
+      setModalMessage("Attendance records updated/overridden successfully (Local Mock).");
+      setTimeout(() => {
+        setEditingSlot(null);
+        setModalMessage('');
+        setSelectedDomains([]);
+        setSlotAttendance([]);
+      }, 1000);
+      return;
+    }
+
     try {
       const slotDocRef = doc(db, `/artifacts/${appId}/public/data/attendance_slots`, editingSlot.id);
-      const attendanceToSave = slotAttendance.map(user => ({
-        userId: user.id,
-        isPresent: user.isPresent,
-        username: user.username,
-        domain: user.domain,
-        position: user.position,
-      }));
 
       await updateDoc(slotDocRef, {
         slotType: editingSlot.slotType,
@@ -1255,6 +1281,7 @@ const App = () => {
         selectedDomains: selectedDomains,
         eligibleUserIds: slotAttendance.map(u => u.id),
         attendance: attendanceToSave,
+        attendanceTaken: true,
       });
 
       setModalMessage("Attendance records updated/overridden successfully.");
@@ -1302,7 +1329,12 @@ const App = () => {
     }
     setSelectedDomains(domainsList);
 
-    const usersForSlot = allUsers.filter(u => u.status === 'active' && domainsList.includes(u.domain));
+    const eligibleIds = slot.eligibleUserIds;
+    const usersForSlot = allUsers.filter(u =>
+      u.status === 'active' &&
+      domainsList.includes(u.domain) &&
+      (!eligibleIds || eligibleIds.length === 0 || eligibleIds.includes(u.id))
+    );
     const initialAttendance = usersForSlot.map(user => {
       const attendanceRecord = (slot.attendance || []).find(a => a.userId === user.id);
       return {
@@ -1325,7 +1357,7 @@ const App = () => {
           a.userId === userId ? { ...a, isPresent: newIsPresent } : a
         );
         if (!updatedAttendance.some(a => a.userId === userId)) {
-          const user = MOCK_USERS.find(u => u.id === userId);
+          const user = allUsers.find(u => u.id === userId);
           if (user) {
             updatedAttendance.push({
               userId: user.id,
@@ -1336,7 +1368,7 @@ const App = () => {
             });
           }
         }
-        return { ...s, attendance: updatedAttendance };
+        return { ...s, attendance: updatedAttendance, attendanceTaken: true };
       }));
       setMessage("Attendance overridden successfully (Local Mock).");
       setTimeout(() => setMessage(''), 3000);
@@ -1369,7 +1401,8 @@ const App = () => {
       }
 
       await updateDoc(slotDocRef, {
-        attendance: updatedAttendance
+        attendance: updatedAttendance,
+        attendanceTaken: true,
       });
 
       setMessage("Attendance overridden successfully.");
@@ -2113,7 +2146,7 @@ const App = () => {
                   <div className="animate-fade-in-up relative z-20 bg-white rounded-2xl shadow-sm border border-mdc-100 p-4 flex flex-wrap items-center justify-between gap-3 mt-6">
                     <div className="flex flex-wrap items-center gap-3">
                       <button onClick={() => { setModalMessage(''); setSelectedDomains(domains); setSlotAttendance([]); setShowCreateSlot(true); }} className="py-2 px-6 bg-gradient-to-r from-mdc-300 to-mdc-500 hover:from-mdc-500 hover:to-mdc-700 text-white font-semibold rounded-full shadow-md shadow-mdc-900/10 hover:shadow-lg active:scale-[0.98] transition-all">
-                        Post Attendance
+                        Create Slot
                       </button>
                       <CustomMultiSelect
                         className="w-36"
@@ -2170,7 +2203,7 @@ const App = () => {
                               <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-700">{slot.timings || 'N/A'}</td>
                               <td className="px-6 py-3.5 whitespace-nowrap text-right text-sm font-medium">
                                 <div className="flex space-x-4">
-                                  <button onClick={() => handleMarkAttendance(slot)} className="text-mdc-700 hover:text-mdc-900 font-semibold">Mark / Override Attendance</button>
+                                  <button onClick={() => handleMarkAttendance(slot)} className="text-mdc-700 hover:text-mdc-900 font-semibold">{slot.attendanceTaken ? 'Overwrite Attendance' : 'Mark Attendance'}</button>
                                   <button onClick={() => handleDeleteSlot(slot)} className="text-red-600 hover:text-red-900 font-semibold">Delete</button>
                                 </div>
                               </td>
@@ -2538,7 +2571,9 @@ const App = () => {
         <div className="fixed inset-0 bg-mdc-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-overlay-in">
           <div className="bg-white rounded-3xl shadow-2xl border border-mdc-100 animate-modal-in p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
             <h3 className="text-xl font-bold text-center mb-4">
-              {editingSlot ? `Mark / Override Attendance: ${editingSlot.slotName}` : "Create & Post Attendance"}
+              {editingSlot
+                ? `${editingSlot.attendanceTaken ? 'Overwrite Attendance' : 'Mark Attendance'}: ${editingSlot.slotName}`
+                : "Create Slot"}
             </h3>
             {modalMessage && (
               <div className={`text-center text-sm font-semibold mb-4 ${modalMessage.includes('successfully') ? 'text-green-600 bg-green-50 border border-green-200 rounded-xl p-2' : 'text-red-600 bg-red-50 border border-red-200 rounded-xl p-2'}`}>
@@ -2657,28 +2692,30 @@ const App = () => {
                 )}
               </div>
 
-              {/* Attendance Table */}
+              {/* Attendance / Eligibility Table */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-sm font-bold text-mdc-900">Mark Attendance for Selected Members</h4>
+                  <h4 className="text-sm font-bold text-mdc-900">
+                    {editingSlot ? 'Mark Attendance for Selected Members' : 'Who Should Be Considered for This Slot'}
+                  </h4>
                   <div className="flex space-x-2 text-xs font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, isPresent: true })))}
-                      className="text-green-600 hover:text-green-700"
-                    >
-                      All Present
-                    </button>
-                    <span className="text-gray-300">|</span>
-                    <button
-                      type="button"
-                      onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, isPresent: false })))}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      All Absent
-                    </button>
-                    {editingSlot && (
+                    {editingSlot ? (
                       <>
+                        <button
+                          type="button"
+                          onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, isPresent: true })))}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          All Present
+                        </button>
+                        <span className="text-gray-300">|</span>
+                        <button
+                          type="button"
+                          onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, isPresent: false })))}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          All Absent
+                        </button>
                         <span className="text-gray-300">|</span>
                         <button
                           type="button"
@@ -2698,9 +2735,32 @@ const App = () => {
                           />
                         </label>
                       </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, included: true })))}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          Select All
+                        </button>
+                        <span className="text-gray-300">|</span>
+                        <button
+                          type="button"
+                          onClick={() => setSlotAttendance(prev => prev.map(u => ({ ...u, included: false })))}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Deselect All
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
+                {!editingSlot && (
+                  <p className="text-xs text-gray-500 mb-2">
+                    Everyone is included by default. Uncheck anyone who already informed you they won't be attending — they won't be considered for this slot's attendance.
+                  </p>
+                )}
 
                 <div className="max-h-60 overflow-y-auto border border-mdc-200 rounded-2xl divide-y divide-mdc-100 bg-white">
                   {slotAttendance.length > 0 ? (
@@ -2710,28 +2770,45 @@ const App = () => {
                           <span className="text-sm font-semibold text-gray-800">{user.username}</span>
                           <span className="text-xs text-gray-500 font-medium">{user.domain} • {user.position}</span>
                         </div>
-                        <div className="flex items-center space-x-4">
+                        {editingSlot ? (
+                          <div className="flex items-center space-x-4">
+                            <label className="inline-flex items-center space-x-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`modal-status-${user.id}`}
+                                checked={user.isPresent}
+                                onChange={() => setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, isPresent: true } : u))}
+                                className="custom-radio custom-radio-green"
+                              />
+                              <span className="text-xs font-bold text-gray-600">Present</span>
+                            </label>
+                            <label className="inline-flex items-center space-x-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`modal-status-${user.id}`}
+                                checked={!user.isPresent}
+                                onChange={() => setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, isPresent: false } : u))}
+                                className="custom-radio custom-radio-red"
+                              />
+                              <span className="text-xs font-bold text-gray-600">Absent</span>
+                            </label>
+                          </div>
+                        ) : (
                           <label className="inline-flex items-center space-x-1.5 cursor-pointer">
                             <input
-                              type="radio"
-                              name={`modal-status-${user.id}`}
-                              checked={user.isPresent}
-                              onChange={() => setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, isPresent: true } : u))}
-                              className="custom-radio custom-radio-green"
+                              type="checkbox"
+                              checked={user.included !== false}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, included: checked } : u));
+                              }}
+                              className="h-4 w-4 text-mdc-700 border-mdc-300 rounded"
                             />
-                            <span className="text-xs font-bold text-gray-600">Present</span>
+                            <span className="text-xs font-bold text-gray-600">
+                              {user.included !== false ? 'Considered' : 'Excluded'}
+                            </span>
                           </label>
-                          <label className="inline-flex items-center space-x-1.5 cursor-pointer">
-                            <input
-                              type="radio"
-                              name={`modal-status-${user.id}`}
-                              checked={!user.isPresent}
-                              onChange={() => setSlotAttendance(prev => prev.map(u => u.id === user.id ? { ...u, isPresent: false } : u))}
-                              className="custom-radio custom-radio-red"
-                            />
-                            <span className="text-xs font-bold text-gray-600">Absent</span>
-                          </label>
-                        </div>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -2760,7 +2837,7 @@ const App = () => {
                   type="submit"
                   className="py-2.5 px-6 bg-gradient-to-r from-mdc-700 to-mdc-900 hover:from-mdc-900 hover:to-mdc-900 text-white font-bold rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all text-sm"
                 >
-                  {editingSlot ? 'Save Overrides' : 'Post Attendance'}
+                  {editingSlot ? (editingSlot.attendanceTaken ? 'Save Overwrite' : 'Save Attendance') : 'Create Slot'}
                 </button>
               </div>
             </form>
